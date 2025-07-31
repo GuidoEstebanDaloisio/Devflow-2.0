@@ -34,12 +34,25 @@ public class ProyectoController {
 
     // ---------------- ADMIN ---------------- //
     @GetMapping("/admin")
-    public List<Proyecto> obtenerProyectosComoAdmin(
+    public List<Proyecto> obtenerProyectosAdmin(
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false) String estado,
-            HttpSession session) {
+            @RequestHeader("Authorization") String authHeader) {
 
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("No se proporcionó el token");
+        }
+
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuario = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        System.out.println("\n\n >>Usuario autenticado: " + usuario.getNombre() + ", rol: " + usuario.getRol() + "\n\n");
+
+        if (usuario == null) {
+            throw new RuntimeException("No hay usuario autenticado");
+        }
+
         if (!usuario.esAdministrador()) {
             throw new RuntimeException("No autorizado");
         }
@@ -100,9 +113,22 @@ public class ProyectoController {
     public List<Proyecto> obtenerProyectosGerente(
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false) String estado,
-            HttpSession session) {
+            @RequestHeader("Authorization") String authHeader) {
 
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("No se proporcionó el token");
+        }
+
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuario = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        System.out.println("\n\n >>Usuario autenticado: " + usuario.getNombre() + ", rol: " + usuario.getRol() + "\n\n");
+
+        if (usuario == null) {
+            throw new RuntimeException("No hay usuario autenticado");
+        }
+
         if (!usuario.esGerente()) {
             throw new RuntimeException("No autorizado");
         }

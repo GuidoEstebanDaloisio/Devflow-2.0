@@ -43,7 +43,7 @@ public class InicioController {
         return usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
     }
 
-    @GetMapping("/cliente/{idUsuario}/inicio")
+    @GetMapping("/inicio/cliente/{idUsuario}")
     public ResponseEntity<?> verInicioCliente(
             @PathVariable Long idUsuario,
             @RequestHeader("Authorization") String authHeader) {
@@ -69,7 +69,7 @@ public class InicioController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/gerente/{idUsuario}/inicio")
+    @GetMapping("/inicio/gerente/{idUsuario}")
     public ResponseEntity<?> verInicioGerente(
             @PathVariable Long idUsuario,
             @RequestHeader("Authorization") String authHeader) {
@@ -95,7 +95,7 @@ public class InicioController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/admin/{idUsuario}/inicio")
+    @GetMapping("/inicio/admin/{idUsuario}")
     public ResponseEntity<?> verInicioAdmin(
             @PathVariable Long idUsuario,
             @RequestHeader("Authorization") String authHeader) {
