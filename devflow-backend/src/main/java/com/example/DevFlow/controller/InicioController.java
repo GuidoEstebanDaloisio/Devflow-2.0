@@ -1,107 +1,120 @@
 package com.example.DevFlow.controller;
 
+import com.example.DevFlow.DTO.UsuarioDTO;
 import com.example.DevFlow.model.EstadoProyecto;
 import com.example.DevFlow.model.Usuario;
+import com.example.DevFlow.security.JwtUtil;
 import com.example.DevFlow.service.DesarrolladorService;
 import com.example.DevFlow.service.ProyectoService;
 import com.example.DevFlow.service.UsuarioService;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+@RestController
+@RequestMapping("/api")
 public class InicioController {
 
-    @Autowired
-    private ProyectoService proyectoService;
+    private final ProyectoService proyectoService;
+    private final UsuarioService usuarioService;
+    private final DesarrolladorService desarrolladorService;
+    private final JwtUtil jwtUtil;
 
-    @Autowired
-    private UsuarioService usuarioService;
-
-    @Autowired
-    private DesarrolladorService desarrolladorService;
-
-    @GetMapping("/cliente")
-    public String verInicioCliente(HttpSession session, 
-            Model model){
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esCliente()) {
-            return "redirect:/login";
-        }
-        
-        int cantidadProyectosEnRevision = proyectoService.obtenerCantidadProyectosPorEstadoYCliente(usuario.getId(), EstadoProyecto.ESPERANDO_REVISION);
-        int cantidadProyectosAprobados = proyectoService.obtenerCantidadProyectosPorEstadoYCliente(usuario.getId(), EstadoProyecto.APROBADO);
-        int cantidadProyectosRechazados = proyectoService.obtenerCantidadProyectosPorEstadoYCliente(usuario.getId(), EstadoProyecto.RECHAZADO);
-        int cantidadProyectosEnProceso = proyectoService.obtenerCantidadProyectosPorEstadoYCliente(usuario.getId(), EstadoProyecto.EN_PROGRESO);
-        int cantidadProyectosFinalizados = proyectoService.obtenerCantidadProyectosPorEstadoYCliente(usuario.getId(), EstadoProyecto.COMPLETADO);
-        int cantidadProyectosCancelados = proyectoService.obtenerCantidadProyectosPorEstadoYCliente(usuario.getId(), EstadoProyecto.CANCELADO);        
-        int cantidadProyectosEnPausa = proyectoService.obtenerCantidadProyectosPorEstadoYCliente(usuario.getId(), EstadoProyecto.EN_PAUSA);
-        
-        
-        model.addAttribute("usuario", usuario);
-        model.addAttribute("CantProyectosEnRevision", cantidadProyectosEnRevision);
-        model.addAttribute("CantProyectosAprobados", cantidadProyectosAprobados);
-        model.addAttribute("CantProyectosRechazados", cantidadProyectosRechazados);
-        model.addAttribute("CantProyectosEnProceso", cantidadProyectosEnProceso);
-        model.addAttribute("CantProyectosFinalizados", cantidadProyectosFinalizados);
-        model.addAttribute("CantProyectosCancelados", cantidadProyectosCancelados);
-        model.addAttribute("CantProyectosEnPausa", cantidadProyectosEnPausa);
-
-        return "cliente/inicio";
+    public InicioController(ProyectoService proyectoService, UsuarioService usuarioService, DesarrolladorService desarrolladorService, JwtUtil jwtUtil) {
+        this.proyectoService = proyectoService;
+        this.usuarioService = usuarioService;
+        this.desarrolladorService = desarrolladorService;
+        this.jwtUtil = jwtUtil;
     }
 
-    @GetMapping("/gerente")
-    public String verInicioGerente(HttpSession session, 
-            Model model){
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esGerente()) {
-            return "redirect:/login";
+    private Usuario obtenerUsuarioDesdeToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
         }
-
-        int cantidadProyectosEnRevision = proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.ESPERANDO_REVISION);
-        int cantidadProyectosAprobados = proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.APROBADO);
-        int cantidadProyectosRechazados = proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.RECHAZADO);
-        int cantidadProyectosEnProceso = proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.EN_PROGRESO);
-        int cantidadProyectosFinalizados = proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.COMPLETADO);
-        int cantidadProyectosCancelados = proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.CANCELADO);        
-        int cantidadProyectosEnPausa = proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.EN_PAUSA);
-
-        model.addAttribute("usuario", usuario);
-        model.addAttribute("CantProyectosEnRevision", cantidadProyectosEnRevision);
-        model.addAttribute("CantProyectosAprobados", cantidadProyectosAprobados);
-        model.addAttribute("CantProyectosRechazados", cantidadProyectosRechazados);
-        model.addAttribute("CantProyectosEnProceso", cantidadProyectosEnProceso);
-        model.addAttribute("CantProyectosFinalizados", cantidadProyectosFinalizados);
-        model.addAttribute("CantProyectosCancelados", cantidadProyectosCancelados);
-        model.addAttribute("CantProyectosEnPausa", cantidadProyectosEnPausa);
-        
-        return "gerente/inicio";
+        String token = authHeader.substring(7);
+        if (!jwtUtil.validarToken(token)) {
+            return null;
+        }
+        String nombreUsuario = jwtUtil.obtenerNombreUsuario(token);
+        return usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
     }
 
-    @GetMapping("/admin")
-    public String verInicioAdmin(HttpSession session, 
-            Model model){
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
+    @GetMapping("/cliente/{idUsuario}/inicio")
+    public ResponseEntity<?> verInicioCliente(
+            @PathVariable Long idUsuario,
+            @RequestHeader("Authorization") String authHeader) {
 
-        if (!usuario.esAdministrador()) {
-            return "redirect:/login";
+        Usuario usuario = obtenerUsuarioDesdeToken(authHeader);
+        if (usuario == null || !usuario.getId().equals(idUsuario) || !usuario.esCliente()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado");
         }
 
-        int cantidadUsuarios = usuarioService.obtenerCantidadUsuarios();
-        int cantidadProyectosEnProceso = proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.EN_PROGRESO);
-        int cantidadProyectosEnPausa = proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.EN_PAUSA);
-        int cantidadDesarrolladoresDisponibles = desarrolladorService.obtenerCantidadDesarrolladoresDisponibles();
+        Map<String, Integer> stats = new HashMap<>();
+        stats.put("CantProyectosEnRevision", proyectoService.obtenerCantidadProyectosPorEstadoYCliente(idUsuario, EstadoProyecto.ESPERANDO_REVISION));
+        stats.put("CantProyectosAprobados", proyectoService.obtenerCantidadProyectosPorEstadoYCliente(idUsuario, EstadoProyecto.APROBADO));
+        stats.put("CantProyectosRechazados", proyectoService.obtenerCantidadProyectosPorEstadoYCliente(idUsuario, EstadoProyecto.RECHAZADO));
+        stats.put("CantProyectosEnProceso", proyectoService.obtenerCantidadProyectosPorEstadoYCliente(idUsuario, EstadoProyecto.EN_PROGRESO));
+        stats.put("CantProyectosFinalizados", proyectoService.obtenerCantidadProyectosPorEstadoYCliente(idUsuario, EstadoProyecto.COMPLETADO));
+        stats.put("CantProyectosCancelados", proyectoService.obtenerCantidadProyectosPorEstadoYCliente(idUsuario, EstadoProyecto.CANCELADO));
+        stats.put("CantProyectosEnPausa", proyectoService.obtenerCantidadProyectosPorEstadoYCliente(idUsuario, EstadoProyecto.EN_PAUSA));
 
-        model.addAttribute("usuario", usuario);
-        model.addAttribute("CantUsuarios", cantidadUsuarios);
-        model.addAttribute("CantProyectosEnProceso", cantidadProyectosEnProceso);
-        model.addAttribute("CantProyectosEnPausa", cantidadProyectosEnPausa);
-        model.addAttribute("CantDevDisponibles", cantidadDesarrolladoresDisponibles);
+        Map<String, Object> response = new HashMap<>();
+        response.put("usuario", new UsuarioDTO(usuario));  // si querés enviar datos usuario
+        response.put("estadisticas", stats);
 
-        return "administrador/inicio";
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/gerente/{idUsuario}/inicio")
+    public ResponseEntity<?> verInicioGerente(
+            @PathVariable Long idUsuario,
+            @RequestHeader("Authorization") String authHeader) {
+
+        Usuario usuario = obtenerUsuarioDesdeToken(authHeader);
+        if (usuario == null || !usuario.getId().equals(idUsuario) || !usuario.esGerente()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado");
+        }
+
+        Map<String, Integer> stats = new HashMap<>();
+        stats.put("CantProyectosEnRevision", proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.ESPERANDO_REVISION));
+        stats.put("CantProyectosAprobados", proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.APROBADO));
+        stats.put("CantProyectosRechazados", proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.RECHAZADO));
+        stats.put("CantProyectosEnProceso", proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.EN_PROGRESO));
+        stats.put("CantProyectosFinalizados", proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.COMPLETADO));
+        stats.put("CantProyectosCancelados", proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.CANCELADO));
+        stats.put("CantProyectosEnPausa", proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.EN_PAUSA));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("usuario", new UsuarioDTO(usuario));
+        response.put("estadisticas", stats);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/admin/{idUsuario}/inicio")
+    public ResponseEntity<?> verInicioAdmin(
+            @PathVariable Long idUsuario,
+            @RequestHeader("Authorization") String authHeader) {
+
+        Usuario usuario = obtenerUsuarioDesdeToken(authHeader);
+        if (usuario == null || !usuario.getId().equals(idUsuario) || !usuario.esAdministrador()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado");
+        }
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("CantUsuarios", usuarioService.obtenerCantidadUsuarios());
+        stats.put("CantProyectosEnProceso", proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.EN_PROGRESO));
+        stats.put("CantProyectosEnPausa", proyectoService.obtenerCantidadProyectosPorEstado(EstadoProyecto.EN_PAUSA));
+        stats.put("CantDevDisponibles", desarrolladorService.obtenerCantidadDesarrolladoresDisponibles());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("usuario", new UsuarioDTO(usuario));
+        response.put("estadisticas", stats);
+
+        return ResponseEntity.ok(response);
     }
 }

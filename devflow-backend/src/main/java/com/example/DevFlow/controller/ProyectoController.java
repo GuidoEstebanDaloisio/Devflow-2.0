@@ -3,25 +3,25 @@ package com.example.DevFlow.controller;
 import com.example.DevFlow.model.Desarrollador;
 import com.example.DevFlow.model.EstadoProyecto;
 import com.example.DevFlow.model.Proyecto;
-import com.example.DevFlow.model.RolUsuario;
-import static com.example.DevFlow.model.RolUsuario.*;
 import com.example.DevFlow.model.Usuario;
+import com.example.DevFlow.security.JwtUtil;
 import com.example.DevFlow.service.DesarrolladorService;
 import com.example.DevFlow.service.ProyectoService;
 import com.example.DevFlow.service.UsuarioService;
 import jakarta.servlet.http.HttpSession;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
+import java.util.Date;
+import java.util.List;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
+@RestController
+@RequestMapping("/api/proyectos")
 public class ProyectoController {
+
+    private JwtUtil jwtUtil = new JwtUtil();
 
     @Autowired
     private ProyectoService proyectoService;
@@ -32,319 +32,192 @@ public class ProyectoController {
     @Autowired
     private DesarrolladorService desarrolladorService;
 
-    //-VISTAS ADMINISTRADOR---------------------------------------------------------------------------------    
-    @GetMapping("/admin/proyectos")
-    public String verProyectosComoAdmin(
+    // ---------------- ADMIN ---------------- //
+    @GetMapping("/admin")
+    public List<Proyecto> obtenerProyectosComoAdmin(
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false) String estado,
-            Model model, HttpSession session) {
-
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esAdministrador()) {
-            return "redirect:/login";
-        }
-
-        List<Proyecto> proyectos = proyectoService.obtenerListadoDeProyectos(filtro, estado);
-
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-        model.addAttribute("proyectos", proyectos);
-        model.addAttribute("filtro", filtro);
-        model.addAttribute("estadoSeleccionado", estado);
-
-        return "administrador/listadoDeProyectos";
-    }
-
-    @GetMapping("/admin/proyectos/detalles/{id}")
-    public String verDetallesProyectoComoAdmin(
-            @PathVariable Long id,
-            Model model,
             HttpSession session) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
 
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
         if (!usuario.esAdministrador()) {
-            return "redirect:/login";
+            throw new RuntimeException("No autorizado");
         }
 
-        Proyecto proyecto = proyectoService.obtenerProyectoPorId(id);
-        List<Desarrollador> desarrolladoresAsignados = desarrolladorService.obtenerPorProyecto(proyecto);
-        List<Desarrollador> desarrolladoresDisponibles = desarrolladorService.obtenerDesarrolladoresDisponibles();
-
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-        model.addAttribute("proyecto", proyecto);
-        model.addAttribute("desarrolladoresAsignados", desarrolladoresAsignados);
-        model.addAttribute("desarrolladoresDisponibles", desarrolladoresDisponibles);
-
-        return "administrador/detallesProyecto";
+        return proyectoService.obtenerListadoDeProyectos(filtro, estado);
     }
 
-    //-VISTAS CLIENTE---------------------------------------------------------------------------------------    
-    @GetMapping("/cliente/proyectos")
-    public String verProyectosComoCliente(
+    @GetMapping("/admin/{id}")
+    public Proyecto obtenerDetallesProyectoAdmin(@PathVariable Long id, HttpSession session) {
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (!usuario.esAdministrador()) {
+            throw new RuntimeException("No autorizado");
+        }
+
+        return proyectoService.obtenerProyectoPorId(id);
+    }
+
+    // ---------------- CLIENTE ---------------- //
+    @GetMapping("/cliente")
+    public List<Proyecto> obtenerProyectosCliente(
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false) String estado,
-            Model model,
-            HttpSession session) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
+            @RequestHeader("Authorization") String authHeader) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("No se proporcionó el token");
+        }
+
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuario = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        System.out.println("\n\n >>Usuario autenticado: " + usuario.getNombre() + ", rol: " + usuario.getRol() + "\n\n");
+
+        if (usuario == null) {
+            throw new RuntimeException("No hay usuario autenticado");
+        }
 
         if (!usuario.esCliente()) {
-            return "redirect:/login";
+            throw new RuntimeException("No autorizado");
         }
-        model.addAttribute("nombreUsuario", usuario.getNombre());
 
-        List<Proyecto> proyectos = proyectoService.obtenerListadoDeProyectosParaCliente(usuario.getId(), filtro, estado);
-
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-        model.addAttribute("proyectos", proyectos);
-        model.addAttribute("filtro", filtro);
-        model.addAttribute("estadoSeleccionado", estado);
-
-        return "cliente/listadoDeProyectos";
+        return proyectoService.obtenerListadoDeProyectosParaCliente(usuario.getId(), filtro, estado);
     }
 
-    @GetMapping("/cliente/proyectos/detalles/{id}")
-    public String verDetallesProyectoComoCliente(
-            @PathVariable Long id,
-            Model model,
-            HttpSession session) {
+    @GetMapping("/cliente/{id}")
+    public Proyecto obtenerDetallesProyectoCliente(@PathVariable Long id, HttpSession session) {
         Usuario usuario = (Usuario) session.getAttribute("usuario");
-
         if (!usuario.esCliente()) {
-            return "redirect:/login";
+            throw new RuntimeException("No autorizado");
         }
 
-        Proyecto proyecto = proyectoService.obtenerProyectoPorId(id);
-        List<Desarrollador> desarrolladoresAsignados = desarrolladorService.obtenerPorProyecto(proyecto);
-
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-        model.addAttribute("proyecto", proyecto);
-        model.addAttribute("desarrolladoresAsignados", desarrolladoresAsignados);
-
-        return "cliente/detallesProyecto";
+        return proyectoService.obtenerProyectoPorId(id);
     }
 
-    //-VISTAS GERENTE---------------------------------------------------------------------------------------    
-    @GetMapping("/gerente/proyectos")
-    public String verProyectosComoGerente(
+    // ---------------- GERENTE ---------------- //
+    @GetMapping("/gerente")
+    public List<Proyecto> obtenerProyectosGerente(
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false) String estado,
-            Model model,
             HttpSession session) {
 
         Usuario usuario = (Usuario) session.getAttribute("usuario");
-
         if (!usuario.esGerente()) {
-            return "redirect:/login";
+            throw new RuntimeException("No autorizado");
         }
 
-        List<Proyecto> proyectos = proyectoService.obtenerListadoDeProyectos(filtro, estado);
-
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-        model.addAttribute("proyectos", proyectos);
-        model.addAttribute("filtro", filtro);
-        model.addAttribute("estadoSeleccionado", estado);
-
-        return "gerente/listadoDeProyectos";
+        return proyectoService.obtenerListadoDeProyectos(filtro, estado);
     }
 
-    @GetMapping("/gerente/proyectos/nuevo")
-    public String mostrarFormularioNuevoProyecto(
-            HttpSession session,
-            Model model) {
+    @GetMapping("/gerente/{id}")
+    public Proyecto obtenerDetallesProyectoGerente(@PathVariable Long id, HttpSession session) {
         Usuario usuario = (Usuario) session.getAttribute("usuario");
-
         if (!usuario.esGerente()) {
-            return "redirect:/login";
+            throw new RuntimeException("No autorizado");
         }
 
-        List<Usuario> clientes = usuarioService.obtenerUsuariosPorRol(CLIENTE);
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-        model.addAttribute("clientes", clientes);
-
-        return "gerente/nuevoProyecto";
+        return proyectoService.obtenerProyectoPorId(id);
     }
 
-    @GetMapping("/gerente/proyectos/detalles/{id}")
-    public String verDetallesProyectoComoGerente(
-            @PathVariable Long id,
-            Model model,
-            HttpSession session) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esGerente()) {
-            return "redirect:/login";
-        }
-
-        Proyecto proyecto = proyectoService.obtenerProyectoPorId(id);
-        List<Desarrollador> desarrolladoresAsignados = desarrolladorService.obtenerPorProyecto(proyecto);
-
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-        model.addAttribute("proyecto", proyecto);
-        model.addAttribute("desarrolladoresAsignados", desarrolladoresAsignados);
-
-        return "gerente/detallesProyecto";
-    }
-
-    @GetMapping("/gerente/proyectos/editar/{id}")
-    public String mostrarFormularioEditarProyecto(
-            @PathVariable Long id,
-            Model model,
-            HttpSession session) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esGerente()) {
-            return "redirect:/login";
-        }
-
-        Proyecto proyecto = proyectoService.obtenerProyectoPorId(id);
-
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-
-        try {
-            proyectoService.consultarSiEsPosibleEditarElProyecto(proyecto);
-
-            model.addAttribute("proyecto", proyecto);
-
-            return "gerente/editarProyecto";
-        } catch (IllegalArgumentException e) {
-            return "redirect:/gerente/proyectos/detalles/" + id + "?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
-        }
-
-    }
-
-    //-ALTA, BAJA Y MODIFICACION----------------------------------------------------------------------------
-    @PostMapping("/gerente/proyectos/nuevo")
-    public String crearProyecto(
+    @PostMapping("/gerente")
+    public void crearProyecto(
             @RequestParam String titulo,
             @RequestParam String descripcion,
             @RequestParam String medio_encargo,
             @RequestParam Double presupuesto,
             @RequestParam Long clienteId,
-            HttpSession session,
-            Model model) {
+            HttpSession session) {
 
         Usuario usuario = (Usuario) session.getAttribute("usuario");
-
         if (!usuario.esGerente()) {
-            return "redirect:/login";
+            throw new RuntimeException("No autorizado");
         }
-        model.addAttribute("nombreUsuario", usuario.getNombre());
 
-        try {
-            Usuario cliente = usuarioService.obtenerUsuarioPorId(clienteId);
-
-            proyectoService.crearProyecto(titulo, descripcion, medio_encargo, presupuesto, cliente);
-            return "redirect:/gerente/proyectos";
-        } catch (IllegalArgumentException e) {
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("titulo", titulo);
-            model.addAttribute("descripcion", descripcion);
-            model.addAttribute("medio_encargo", medio_encargo);
-            model.addAttribute("presupuesto", presupuesto);
-
-            // Volvemos a cargar la lista de clientes para el select del formulario
-            List<Usuario> clientes = usuarioService.obtenerUsuariosPorRol(CLIENTE);
-            model.addAttribute("clientes", clientes);
-
-            return "gerente/nuevoProyecto";
-        }
+        Usuario cliente = usuarioService.obtenerUsuarioPorId(clienteId);
+        proyectoService.crearProyecto(titulo, descripcion, medio_encargo, presupuesto, cliente);
     }
 
-    @PostMapping("/gerente/proyectos/detalles/{id}")
-    public String cambiarEstadoProyecto(
+    @PutMapping("/gerente/{id}/estado")
+    public void cambiarEstadoProyecto(
             @PathVariable Long id,
             @RequestParam EstadoProyecto nuevoEstado,
-            Model model,
             HttpSession session) {
+
         Usuario usuario = (Usuario) session.getAttribute("usuario");
-
         if (!usuario.esGerente()) {
-            return "redirect:/login";
+            throw new RuntimeException("No autorizado");
         }
 
-        try {
-            Proyecto proyecto = proyectoService.obtenerProyectoPorId(id);
-            proyectoService.cambiarEstado(proyecto, nuevoEstado);
-            return "redirect:/gerente/proyectos/detalles/{id}";
-        } catch (IllegalArgumentException e) {
-            return "redirect:/gerente/proyectos/detalles/" + id + "?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
-        }
+        Proyecto proyecto = proyectoService.obtenerProyectoPorId(id);
+        proyectoService.cambiarEstado(proyecto, nuevoEstado);
     }
 
-    @PostMapping("/gerente/proyectos/detalles/{id}/guardar-fecha")
-    public String guardarFechaInicio(
+    @PutMapping("/gerente/{id}/fecha-inicio")
+    public void establecerFechaInicio(
             @PathVariable Long id,
-            @RequestParam("fechaInicio")
-            @DateTimeFormat(pattern = "yyyy-MM-dd") Date fechaInicio) {
+            @RequestParam("fechaInicio") @DateTimeFormat(pattern = "yyyy-MM-dd") Date fechaInicio,
+            HttpSession session) {
 
-        // 1) Obtengo el proyecto
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (!usuario.esGerente()) {
+            throw new RuntimeException("No autorizado");
+        }
+
         Proyecto proyecto = proyectoService.obtenerProyectoPorId(id);
-
-        // 2) Guardo la fecha de inicio
         proyectoService.establecerFechaInicio(id, fechaInicio);
-
-        // 3) Cambio el estado a EN_PROGRESO
         proyectoService.cambiarEstado(proyecto, EstadoProyecto.EN_PROGRESO);
-
-        // 4) Redirijo a la página de detalles
-        return "redirect:/gerente/proyectos/detalles/" + id;
     }
 
-    @PostMapping("/gerente/proyectos/detalles/{id}/guardar-fecha-final")
-    public String guardarFechaFin(
+    @PutMapping("/gerente/{id}/fecha-fin")
+    public void establecerFechaFin(
             @PathVariable Long id,
-            @RequestParam("fechaFin")
-            @DateTimeFormat(pattern = "yyyy-MM-dd") Date fechaFin) {
-
-        // 1) Obtengo el proyecto
-        Proyecto proyecto = proyectoService.obtenerProyectoPorId(id);
-
-        // 2) Guardo la fecha de fin
-        proyectoService.establecerFechaFin(id, fechaFin);
-
-        // 3) Cambio el estado a COMPLETADO
-        proyectoService.cambiarEstado(proyecto, EstadoProyecto.COMPLETADO);
-
-        // 4) Redirijo a la página de detalles
-        return "redirect:/gerente/proyectos/detalles/" + id;
-    }
-
-    @GetMapping("/gerente/proyectos/eliminar/{id}")
-    public String eliminarProyecto(
-            @PathVariable Long id,
+            @RequestParam("fechaFin") @DateTimeFormat(pattern = "yyyy-MM-dd") Date fechaFin,
             HttpSession session) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
 
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
         if (!usuario.esGerente()) {
-            return "redirect:/login";
+            throw new RuntimeException("No autorizado");
+        }
+
+        Proyecto proyecto = proyectoService.obtenerProyectoPorId(id);
+        proyectoService.establecerFechaFin(id, fechaFin);
+        proyectoService.cambiarEstado(proyecto, EstadoProyecto.COMPLETADO);
+    }
+
+    @DeleteMapping("/gerente/{id}")
+    public void eliminarProyecto(@PathVariable Long id, HttpSession session) {
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (!usuario.esGerente()) {
+            throw new RuntimeException("No autorizado");
         }
 
         proyectoService.eliminarProyecto(id);
-
-        return "redirect:/gerente/proyectos";
     }
 
-    @PostMapping("/gerente/proyectos/editar/{id}")
-    public String editarProyecto(
+    @PutMapping("/gerente/{id}")
+    public void editarProyecto(
             @PathVariable Long id,
-            @ModelAttribute Proyecto proyectoActualizado,
-            Model model,
+            @RequestBody Proyecto proyectoActualizado,
             HttpSession session) {
+
         Usuario usuario = (Usuario) session.getAttribute("usuario");
-
         if (!usuario.esGerente()) {
-            return "redirect:/login";
+            throw new RuntimeException("No autorizado");
         }
-        model.addAttribute("nombreUsuario", usuario.getNombre());
 
-        try {
-            proyectoService.actualizarProyecto(id, proyectoActualizado);
-            return "redirect:/gerente/proyectos";
-        } catch (IllegalArgumentException e) {
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("proyecto", proyectoActualizado);
-            return "gerente/editarProyecto";
-        }
+        proyectoService.actualizarProyecto(id, proyectoActualizado);
     }
 
+    // ---------------- AUXILIARES ---------------- //
+    @GetMapping("/{id}/desarrolladores")
+    public List<Desarrollador> obtenerDesarrolladoresAsignados(@PathVariable Long id) {
+        Proyecto proyecto = proyectoService.obtenerProyectoPorId(id);
+        return desarrolladorService.obtenerPorProyecto(proyecto);
+    }
+
+    @GetMapping("/desarrolladores/disponibles")
+    public List<Desarrollador> obtenerDesarrolladoresDisponibles() {
+        return desarrolladorService.obtenerDesarrolladoresDisponibles();
+    }
 }

@@ -212,5 +212,4 @@ public class UsuarioService {
 
         return clientes;
     }
-
 }

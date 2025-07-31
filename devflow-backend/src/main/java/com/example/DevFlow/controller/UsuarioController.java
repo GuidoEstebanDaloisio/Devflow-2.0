@@ -1,5 +1,6 @@
 package com.example.DevFlow.controller;
 
+import com.example.DevFlow.DTO.UsuarioDTO;
 import com.example.DevFlow.model.Proyecto;
 import com.example.DevFlow.model.RolUsuario;
 import com.example.DevFlow.model.Usuario;
@@ -10,6 +11,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -218,5 +221,4 @@ public class UsuarioController {
             return "administrador/editarUsuario";
         }
     }
-
 }
