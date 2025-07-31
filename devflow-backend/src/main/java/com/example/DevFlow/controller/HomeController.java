@@ -11,7 +11,7 @@ public class HomeController {
         return "index"; // Spring busca en /templates/index.html
     }
     
-    @GetMapping("/login") 
+    @GetMapping("/login")
     public String login() {
         return "login"; // Carga templates/login.html
     }

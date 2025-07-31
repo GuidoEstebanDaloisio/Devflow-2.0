@@ -31,7 +31,6 @@ function AdminHome() {
       <Header/>
       <div className='main-container'>
         <Sidebar />
-        <>Pato</>
         <main className='content'>
           <section className='user-card'>
             <p><strong>Nombre:</strong> {usuario?.nombre || 'user_name'}</p>
