@@ -1,21 +1,33 @@
 package com.example.DevFlow.controller;
 
+import com.example.DevFlow.DTO.DesarrolladorDTO;
 import com.example.DevFlow.model.Desarrollador;
 import com.example.DevFlow.model.Proyecto;
 import com.example.DevFlow.model.Usuario;
+import com.example.DevFlow.security.JwtUtil;
 import com.example.DevFlow.service.DesarrolladorService;
 import com.example.DevFlow.service.ProyectoService;
+import com.example.DevFlow.service.UsuarioService;
 import jakarta.servlet.http.HttpSession;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
+@RequestMapping("/api")
 public class DesarrolladorController {
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private UsuarioService usuarioService;
 
     @Autowired
     private DesarrolladorService desarrolladorService;
@@ -25,28 +37,29 @@ public class DesarrolladorController {
 
     //-VISTAS-----------------------------------------------------------------------------------------------    
     @GetMapping("/admin/desarrolladores")
-    public String verDesarrolladores(
+    public ResponseEntity<List<DesarrolladorDTO>> obtenerDesarrolladoresComoAdmin(
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false) String estado,
-            Model model,
-            HttpSession session) {
+            @RequestHeader("Authorization") String authHeader) {
 
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esAdministrador()) {
-            return "redirect:/login";
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        model.addAttribute("nombreUsuario", usuario.getNombre());
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuario = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        if (usuario == null || !usuario.esAdministrador()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
         List<Desarrollador> desarrolladores = desarrolladorService.obtenerListadoDeDesarrolladores(filtro, estado);
+        List<DesarrolladorDTO> desarrolladoresDTO = desarrolladores.stream()
+                .map(DesarrolladorDTO::new)
+                .toList();
 
-        // Agrega datos al modelo
-        model.addAttribute("desarrolladores", desarrolladores);
-        model.addAttribute("filtro", filtro);
-        model.addAttribute("estadoSeleccionado", estado);
-
-        return "administrador/listadoDeDesarrolladores";
+        return ResponseEntity.ok(desarrolladoresDTO);
     }
 
     @GetMapping("/admin/desarrolladores/nuevo")

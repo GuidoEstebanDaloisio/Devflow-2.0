@@ -4,6 +4,7 @@ import com.example.DevFlow.DTO.UsuarioDTO;
 import com.example.DevFlow.model.Proyecto;
 import com.example.DevFlow.model.RolUsuario;
 import com.example.DevFlow.model.Usuario;
+import com.example.DevFlow.security.JwtUtil;
 import com.example.DevFlow.service.ProyectoService;
 import com.example.DevFlow.service.UsuarioService;
 import jakarta.servlet.http.HttpSession;
@@ -19,10 +20,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
+@RequestMapping("/api")
 public class UsuarioController {
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Autowired
     private UsuarioService usuarioService;
@@ -32,23 +40,28 @@ public class UsuarioController {
 
     //-VISTAS GERENTE---------------------------------------------------------------------------------------    
     @GetMapping("/gerente/clientes")
-    public String verClientesComoGerente(
+    public ResponseEntity<List<UsuarioDTO>> obtenerClientesComoGerente(
             @RequestParam(required = false) String filtro,
-            Model model, HttpSession session) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
+            @RequestHeader("Authorization") String authHeader) {
 
-        if (!usuario.esGerente()) {
-            return "redirect:/login";
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuario = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        if (usuario == null || !usuario.esGerente()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         List<Usuario> usuarios = usuarioService.obtenerListadoDeClientes(filtro);
+        List<UsuarioDTO> usuariosDTO = usuarios.stream()
+                .map(UsuarioDTO::new)
+                .toList();
 
-        // Agrega los datos al modelo
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-        model.addAttribute("usuarios", usuarios);
-        model.addAttribute("filtro", filtro);
-
-        return "gerente/listadoDeClientes";
+        return ResponseEntity.ok(usuariosDTO);
     }
 
     @GetMapping("/gerente/clientes/detalles/{id}")
@@ -74,24 +87,29 @@ public class UsuarioController {
 
     //-VISTAS ADMINISTRADOR---------------------------------------------------------------------------------    
     @GetMapping("/admin/usuarios")
-    public String verUsuariosComoAdmin(
+    public ResponseEntity<List<UsuarioDTO>> obtenerUsuariosComoAdmin(
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false) String rol,
-            Model model, HttpSession session) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
+            @RequestHeader("Authorization") String authHeader) {
 
-        if (!usuario.esAdministrador()) {
-            return "redirect:/login";
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuario = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        if (usuario == null || !usuario.esAdministrador()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         List<Usuario> usuarios = usuarioService.obtenerListadoDeUsuarios(filtro, rol);
+        List<UsuarioDTO> usuariosDTO = usuarios.stream()
+                .map(UsuarioDTO::new)
+                .toList();
 
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-        model.addAttribute("usuarios", usuarios);
-        model.addAttribute("filtro", filtro);
-        model.addAttribute("rolSeleccionado", rol);
-
-        return "administrador/listadoDeUsuarios";
+        return ResponseEntity.ok(usuariosDTO);
     }
 
     @GetMapping("/admin/usuarios/detalles/{id}")

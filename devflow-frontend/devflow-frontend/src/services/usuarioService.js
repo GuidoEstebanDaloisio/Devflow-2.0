@@ -1,31 +1,29 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8080/api';
 
-export const login = async (nombreUsuario, password) => {
-  const response = await axios.post(`${API_BASE}/login`, {
-    nombreUsuario,
-    password,
-  });
-  return response.data; // ← ahora incluye el token y el usuario
-};
-
-export const obtenerUsuarioActual = async () => {
+export const obtenerClientesGerente = async (filtro) => {
   const token = localStorage.getItem('token');
-  const response = await axios.get(`${API_BASE}/usuario-actual`, {
+
+  const response = await axios.get('http://localhost:8080/api/gerente/clientes', {
+    params: { filtro },
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
+
   return response.data;
 };
 
-export const testGet = async () => {
+
+export const obtenerUsuariosAdmin = async (filtro, rol) => {
   const token = localStorage.getItem('token');
-  const response = await axios.get(`${API_BASE}/test`, {
+
+  const response = await axios.get('http://localhost:8080/api/admin/usuarios', {
+    params: { filtro, rol },
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
+
   return response.data;
 };

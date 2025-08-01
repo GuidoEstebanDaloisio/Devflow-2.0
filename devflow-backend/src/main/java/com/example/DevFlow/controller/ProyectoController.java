@@ -21,7 +21,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 @RequestMapping("/api/proyectos")
 public class ProyectoController {
 
-    private JwtUtil jwtUtil = new JwtUtil();
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Autowired
     private ProyectoService proyectoService;
