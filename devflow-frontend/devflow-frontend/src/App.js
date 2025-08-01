@@ -9,6 +9,7 @@ import AdminListadoDeUsuarios from './pages/Admin/AdminListadoDeUsuarios';
 import AdminDetalleUsuario from './pages/Admin/AdminDetalleUsuario';
 import AdminEditarUsuario from './pages/Admin/AdminEditarUsuario';
 import AdminListadoDeDesarrolladores from './pages/Admin/AdminListadoDeDesarrolladores';
+import AdminEditarDesarrollador from './pages/Admin/AdminEditarDesarrollador';
 
 
 import GerenteHome from './pages/Gerente/GerenteHome';
@@ -39,6 +40,7 @@ function App() {
         <Route path="/admin/usuarios/detalles/:id" element={<AdminDetalleUsuario />} />
         <Route path="/admin/usuarios/editar/:id" element={<AdminEditarUsuario />} />
         <Route path="/admin/desarrolladores" element={<AdminListadoDeDesarrolladores />} />
+        <Route path="/admin/desarrolladores/editar/:id" element={<AdminEditarDesarrollador />} />
 
 
         <Route path="/gerente" element={<GerenteHome />} />

@@ -77,6 +77,7 @@ public class DesarrolladorController {
         return "administrador/nuevoDesarrollador";
     }
 
+    /*
     @GetMapping("/admin/desarrolladores/editar/{id}")
     public String mostrarFormularioEdicionDesarrollador(@PathVariable Long id,
             HttpSession session,
@@ -94,6 +95,34 @@ public class DesarrolladorController {
             return "administrador/editarDesarrollador";
         } catch (IllegalArgumentException e) {
             return "redirect:/admin/desarrolladores?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);    //Envio el error desde el servicio
+        }
+    }*/
+    @GetMapping("/admin/desarrolladores/{id}")
+    public ResponseEntity<?> obtenerDetalleDesarrollador(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
+
+        // 1) Verificación básica del token
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String token = authHeader.substring(7);
+
+        // 2) Extraer usuario de sesión y validar rol
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+        if (usuarioSesion == null || !usuarioSesion.esAdministrador()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // 3) Recuperar y devolver el DTO
+        try {
+            Desarrollador desarrollador = desarrolladorService.obtenerDesarrolladorPorId(id);
+            DesarrolladorDTO dto = new DesarrolladorDTO(desarrollador);
+            return ResponseEntity.ok(dto);
+        } catch (IllegalArgumentException e) {
+            // Por ejemplo si no existe el ID
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
@@ -185,26 +214,38 @@ public class DesarrolladorController {
         return "redirect:/admin/desarrolladores";
     }
 
-    @PostMapping("/admin/desarrolladores/editar/{id}")
-    public String actualizarDesarrollador(@PathVariable Long id,
-            @ModelAttribute Desarrollador desarrolladorActualizado,
-            HttpSession session,
-            Model model) {
+    @PutMapping("/admin/desarrolladores/editar/{id}")
+    public ResponseEntity<?> actualizarDesarrollador(
+            @PathVariable Long id,
+            @RequestBody Desarrollador desarrolladorActualizado,
+            @RequestHeader("Authorization") String authHeader) {
 
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esAdministrador()) {
-            return "redirect:/login";
+        // 1) Validación básica del token
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        model.addAttribute("nombreUsuario", usuario.getNombre());
 
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        // 2) Validar rol administrador
+        if (usuarioSesion == null || !usuarioSesion.esAdministrador()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // 3) Actualizar desarrollador
         try {
-            desarrolladorService.actualizarNombreYHabilidades(id, desarrolladorActualizado.getNombre(), desarrolladorActualizado.getHabilidades());
-            return "redirect:/admin/desarrolladores";
+            desarrolladorService.actualizarNombreYHabilidades(
+                    id,
+                    desarrolladorActualizado.getNombre(),
+                    desarrolladorActualizado.getHabilidades()
+            );
+            return ResponseEntity.ok().build();
+
         } catch (IllegalArgumentException e) {
-            model.addAttribute("desarrollador", desarrolladorActualizado);
-            model.addAttribute("error", e.getMessage());
-            return "administrador/editarDesarrollador";
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
 }

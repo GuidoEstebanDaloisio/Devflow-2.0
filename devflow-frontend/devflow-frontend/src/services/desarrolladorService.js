@@ -15,6 +15,34 @@ export const obtenerDesarrolladoresAdmin = async (filtro, estado) => {
   return response.data;
 };
 
+export const obtenerDetalleDesarrollador = async (id) => {
+  const token = localStorage.getItem('token');
+
+  const response = await axios.get(`${API_URL}/desarrolladores/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data;
+};
+
+export const actualizarDesarrollador = async (idDesarrollador, datosActualizados) => {
+  const token = localStorage.getItem('token');
+
+  const response = await axios.put(`${API_URL}/desarrolladores/editar/${idDesarrollador}`, datosActualizados,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  return response.data;
+};
+
+
 //--FUNCIONES--------------------------------------------------------------------
 export const asignarDesarrollador = async (proyectoId, desarrolladorId) => {
   const token = localStorage.getItem('token');
