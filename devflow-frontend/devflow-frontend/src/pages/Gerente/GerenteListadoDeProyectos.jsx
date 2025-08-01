@@ -91,12 +91,6 @@ function GerenteListadoDeProyectos() {
                           Ver
                         </button>
                         <button
-                          className={`${styles.btn} ${styles['btn-editar']}`}
-                          onClick={() => window.location.href = `/gerente/proyectos/editar/${proyecto.id}`}
-                        >
-                          Editar
-                        </button>
-                        <button
                           className={`${styles.btn} ${styles['btn-eliminar']}`}
                           onClick={() => window.location.href = `/gerente/proyectos/eliminar/${proyecto.id}`}
                         >

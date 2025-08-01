@@ -46,7 +46,7 @@ public class ProyectoService {
 
     public void actualizarProyecto(Long id, Proyecto actualizado) {
         Proyecto existente = obtenerProyectoPorId(id);
-
+        
         if (existente == null) {
             throw new IllegalArgumentException("Proyecto no encontrado.");
         }
@@ -63,6 +63,8 @@ public class ProyectoService {
 
         proyectoRepository.save(existente);
     }
+
+
 
     public List<Proyecto> obtenerProyectos() {
         return proyectoRepository.findAll();

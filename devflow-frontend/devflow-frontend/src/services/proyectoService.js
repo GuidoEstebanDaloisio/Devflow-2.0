@@ -59,7 +59,7 @@ export const obtenerProyectosAdmin = async (filtro, estado) => {
 export const obtenerDetalleProyecto = async (id) => {
   const token = localStorage.getItem('token');
 
-  const response = await axios.get(`http://localhost:8080/api/proyectos/cliente/${id}`, {
+  const response = await axios.get(`${API_URL}/cliente/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -98,7 +98,7 @@ export const obtenerDetalleProyectoGerente = async (id) => {
 export async function cambiarEstadoProyectoComoGerente(idProyecto, nuevoEstado) {
   const token = localStorage.getItem('token');
 
-  const response = await fetch(`http://localhost:8080/api/proyectos/gerente/${idProyecto}/estado?nuevoEstado=${encodeURIComponent(nuevoEstado)}`, {
+  const response = await fetch(`${API_URL}/gerente/${idProyecto}/estado?nuevoEstado=${encodeURIComponent(nuevoEstado)}`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -116,7 +116,7 @@ export async function cambiarEstadoProyectoComoGerente(idProyecto, nuevoEstado) 
 export const establecerFechaInicio = async (idProyecto, fechaInicio) => {
   const token = localStorage.getItem('token');
 
-  const response = await fetch(`http://localhost:8080/api/proyectos/gerente/${idProyecto}/fecha-inicio?fechaInicio=${fechaInicio}`, {
+  const response = await fetch(`${API_URL}/gerente/${idProyecto}/fecha-inicio?fechaInicio=${fechaInicio}`, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`
@@ -133,7 +133,7 @@ export const establecerFechaInicio = async (idProyecto, fechaInicio) => {
 export const establecerFechaFin = async (idProyecto, fechaFin) => {
   const token = localStorage.getItem('token');
 
-  const response = await fetch(`http://localhost:8080/api/proyectos/gerente/${idProyecto}/fecha-fin?fechaFin=${fechaFin}`, {
+  const response = await fetch(`${API_URL}/gerente/${idProyecto}/fecha-fin?fechaFin=${fechaFin}`, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`
@@ -146,3 +146,18 @@ export const establecerFechaFin = async (idProyecto, fechaFin) => {
 
   return await response.json(); // { mensaje: "..." }
 };
+
+
+export const actualizarProyectoComoGerente = async (id, proyectoActualizado) => {
+  const token = localStorage.getItem('token');
+
+  const response = await axios.put(`${API_URL}/gerente/${id}`, proyectoActualizado, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return response.data; // si el backend no devuelve data, será undefined, no hay problema
+};
+

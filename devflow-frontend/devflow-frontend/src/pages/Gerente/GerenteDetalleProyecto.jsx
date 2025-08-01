@@ -5,7 +5,7 @@ import Sidebar from '../../components/GerenteSidebar';
 import { obtenerDetalleProyectoGerente } from '../../services/proyectoService';
 import '../../styles/estilos.css';
 import styles from '../../styles/botones.module.css';
-import EstadoProyectoBotones from '../../components/EstadoProyectoBotones'; 
+import EstadoProyectoBotones from '../../components/EstadoProyectoBotones';
 
 function GerenteDetalleProyecto() {
     const { id } = useParams();
@@ -59,7 +59,7 @@ function GerenteDetalleProyecto() {
                         <EstadoProyectoBotones
                             proyecto={proyecto}
                             estadoActual={proyecto.estadoAvance}
-                            permisosCambioEstado={permisos} 
+                            permisosCambioEstado={permisos}
                         />
 
                         <p><strong>ID:</strong> {proyecto.id}</p>
@@ -74,10 +74,17 @@ function GerenteDetalleProyecto() {
                     </section>
 
                     <div className={styles['btn-generico']}>
-                        <button onClick={() => navigate(`/gerente/proyectos/editar/${proyecto.id}`)}>Editar Proyecto</button>
+                        {proyecto.estadoAvance === 'ESPERANDO_REVISION' && (
+                            <button onClick={() => navigate(`/gerente/proyectos/editar/${proyecto.id}`)}>
+                                Editar Proyecto
+                            </button>
+                        )}
                         <> </>
-                        <button onClick={() => navigate('/gerente/proyectos')}>Volver a Proyectos</button>
+                        <button onClick={() => navigate('/gerente/proyectos')}>
+                            Volver a Proyectos
+                        </button>
                     </div>
+
 
                     {(proyecto.estadoAvance === 'EN_PROGRESO' || proyecto.estadoAvance === 'EN_PAUSA') && (
                         <div className="user-card">

@@ -1,5 +1,6 @@
 package com.example.DevFlow.controller;
 
+import com.example.DevFlow.DTO.ProyectoDTO;
 import com.example.DevFlow.DTO.UsuarioDTO;
 import com.example.DevFlow.model.Proyecto;
 import com.example.DevFlow.model.RolUsuario;
@@ -10,7 +11,9 @@ import com.example.DevFlow.service.UsuarioService;
 import jakarta.servlet.http.HttpSession;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -64,25 +69,37 @@ public class UsuarioController {
         return ResponseEntity.ok(usuariosDTO);
     }
 
-    @GetMapping("/gerente/clientes/detalles/{id}")
-    public String verDetallesClienteComoGerente(
+    @GetMapping("/gerente/clientes/{id}")
+    public ResponseEntity<?> obtenerDetalleClienteComoGerente(
             @PathVariable Long id,
-            Model model,
-            HttpSession session) {
-        Usuario usuarioSesion = (Usuario) session.getAttribute("usuario");
+            @RequestHeader("Authorization") String authHeader) {
 
-        if (!usuarioSesion.esGerente()) {
-            return "redirect:/login";
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        Usuario usuario = usuarioService.obtenerUsuarioPorId(id);
-        List<Proyecto> proyectosSolicitados = proyectoService.obtenerProyectosPorIdCliente(usuario.getId());
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
 
-        model.addAttribute("nombreUsuario", usuarioSesion.getNombre());
-        model.addAttribute("usuario", usuario);
-        model.addAttribute("proyectosSolicitados", proyectosSolicitados);
+        if (usuarioSesion == null || !usuarioSesion.esGerente()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
-        return "gerente/detallesCliente";
+        Usuario cliente = usuarioService.obtenerUsuarioPorId(id);
+        if (cliente == null || !cliente.esCliente()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cliente no encontrado");
+        }
+
+        List<Proyecto> proyectosSolicitados = proyectoService.obtenerProyectosPorIdCliente(id);
+
+        Map<String, Object> respuesta = new HashMap<>();
+        respuesta.put("cliente", new UsuarioDTO(cliente));
+        respuesta.put("proyectosSolicitados", proyectosSolicitados.stream()
+                .map(ProyectoDTO::new)
+                .toList());
+
+        return ResponseEntity.ok(respuesta);
     }
 
     //-VISTAS ADMINISTRADOR---------------------------------------------------------------------------------    
@@ -112,23 +129,29 @@ public class UsuarioController {
         return ResponseEntity.ok(usuariosDTO);
     }
 
-    @GetMapping("/admin/usuarios/detalles/{id}")
-    public String verDetallesUsuarioComoAdmin(
+    @GetMapping("/admin/usuarios/{id}")
+    public ResponseEntity<?> obtenerDetalleUsuarioComoAdmin(
             @PathVariable Long id,
-            Model model,
-            HttpSession session) {
-        Usuario usuarioSesion = (Usuario) session.getAttribute("usuario");
+            @RequestHeader("Authorization") String authHeader) {
 
-        if (!usuarioSesion.esAdministrador()) {
-            return "redirect:/login";
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        if (usuarioSesion == null || !usuarioSesion.esAdministrador()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         Usuario usuario = usuarioService.obtenerUsuarioPorId(id);
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+        }
 
-        model.addAttribute("nombreUsuario", usuarioSesion.getNombre());
-        model.addAttribute("usuario", usuario);
-
-        return "administrador/detallesUsuario";
+        return ResponseEntity.ok(new UsuarioDTO(usuario));
     }
 
     @GetMapping("/admin/usuarios/nuevo")
@@ -147,7 +170,7 @@ public class UsuarioController {
         return "administrador/nuevoUsuario";
     }
 
-    @GetMapping("/admin/usuarios/editar/{id}")
+    /*@GetMapping("/admin/usuarios/editar/{id}")
     public String mostrarFormularioEdicion(
             @PathVariable Long id,
             HttpSession session,
@@ -164,6 +187,30 @@ public class UsuarioController {
             return "administrador/editarUsuario";
         } catch (IllegalArgumentException e) {
             return "redirect:/admin/usuarios?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);    //Envio el error desde el servicio
+        }
+    }*/
+    @GetMapping("/api/admin/usuarios/{id}")
+    public ResponseEntity<?> obtenerDetalleUsuario(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        if (usuarioSesion == null || !usuarioSesion.esAdministrador()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            Usuario usuario = usuarioService.obtenerUsuarioPorId(id);
+            UsuarioDTO usuarioDTO = new UsuarioDTO(usuario);
+            return ResponseEntity.ok(usuarioDTO);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
@@ -215,28 +262,30 @@ public class UsuarioController {
         return "redirect:/admin/usuarios";
     }
 
-    @PostMapping("/admin/usuarios/editar/{id}")
-    public String actualizarUsuario(
+    @PutMapping("/admin/usuarios/editar/{id}")
+    public ResponseEntity<?> actualizarUsuario(
             @PathVariable Long id,
-            @ModelAttribute Usuario usuarioActualizado,
-            HttpSession session,
-            Model model) {
+            @RequestBody Usuario usuarioActualizado,
+            @RequestHeader("Authorization") String authHeader) {
 
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuario = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
 
         if (!usuario.esAdministrador()) {
-            return "redirect:/login";
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        model.addAttribute("nombreUsuario", usuario.getNombre());
 
-        // Intenta actualizar el usuario
         try {
             usuarioService.actualizarUsuario(id, usuarioActualizado);
-            return "redirect:/admin/usuarios";
+            return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
-            model.addAttribute("usuario", usuarioActualizado);
-            model.addAttribute("error", e.getMessage());
-            return "administrador/editarUsuario";
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
 }

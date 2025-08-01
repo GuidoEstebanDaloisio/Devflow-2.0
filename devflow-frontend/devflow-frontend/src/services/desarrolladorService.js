@@ -1,10 +1,11 @@
 import axios from 'axios';
+const API_URL = 'http://localhost:8080/api/admin';
 
 //--LISTADOS---------------------------------------------------------------------
 export const obtenerDesarrolladoresAdmin = async (filtro, estado) => {
   const token = localStorage.getItem('token');
 
-  const response = await axios.get('http://localhost:8080/api/admin/desarrolladores', {
+  const response = await axios.get(`${API_URL}/desarrolladores`, {
     params: { filtro, estado },
     headers: {
       Authorization: `Bearer ${token}`,
@@ -18,7 +19,7 @@ export const obtenerDesarrolladoresAdmin = async (filtro, estado) => {
 export const asignarDesarrollador = async (proyectoId, desarrolladorId) => {
   const token = localStorage.getItem('token');
 
-  await axios.post(`http://localhost:8080/api/admin/asignar`, {
+  await axios.post(`${API_URL}/asignar`, {
     proyectoId,
     desarrolladorId
   }, {
@@ -32,7 +33,7 @@ export const asignarDesarrollador = async (proyectoId, desarrolladorId) => {
 export const desasignarDesarrollador = async (proyectoId, desarrolladorId) => {
   const token = localStorage.getItem('token');
 
-  await axios.post(`http://localhost:8080/api/admin/desasignar`, {
+  await axios.post(`${API_URL}/desasignar`, {
     proyectoId,
     desarrolladorId
   }, {

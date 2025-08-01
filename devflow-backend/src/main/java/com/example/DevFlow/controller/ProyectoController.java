@@ -345,17 +345,29 @@ public class ProyectoController {
     }
 
     @PutMapping("/gerente/{id}")
-    public void editarProyecto(
+    public ResponseEntity<?> editarProyecto(
             @PathVariable Long id,
             @RequestBody Proyecto proyectoActualizado,
-            HttpSession session) {
+            @RequestHeader("Authorization") String authHeader) {
 
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-        if (!usuario.esGerente()) {
-            throw new RuntimeException("No autorizado");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        proyectoService.actualizarProyecto(id, proyectoActualizado);
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuario = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        if (!usuario.esGerente()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            proyectoService.actualizarProyecto(id, proyectoActualizado);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // ---------------- AUXILIARES ---------------- //
@@ -369,4 +381,5 @@ public class ProyectoController {
     public List<Desarrollador> obtenerDesarrolladoresDisponibles() {
         return desarrolladorService.obtenerDesarrolladoresDisponibles();
     }
+
 }
