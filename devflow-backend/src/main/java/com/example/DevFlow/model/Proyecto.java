@@ -2,6 +2,7 @@ package com.example.DevFlow.model;
 
 import static com.example.DevFlow.model.EstadoProyecto.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -60,7 +61,7 @@ public class Proyecto {
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
-    @JsonIgnore  // Evita bucle infinito al serializar
+    @JsonIgnoreProperties({"proyectos", "password", "email", "telefono"})
     private Usuario usuario;
 
     @OneToMany(mappedBy = "proyecto")
@@ -192,8 +193,8 @@ public class Proyecto {
             desarrolladores.remove(desarrollador);
         }
     }
-    
-    public boolean puedeEditarse(){ //Los datos del proyecto solo pueden editarse mientras esten en revision ya que sino seria un peligro para el cliente
+
+    public boolean puedeEditarse() { //Los datos del proyecto solo pueden editarse mientras esten en revision ya que sino seria un peligro para el cliente
         return estadoAvance == EstadoProyecto.ESPERANDO_REVISION;
     }
 

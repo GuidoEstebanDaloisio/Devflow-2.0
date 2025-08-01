@@ -1,8 +1,8 @@
-import '../styles/estilos.css';
+import '../../styles/estilos.css';
 import { useState, useEffect } from 'react';
-import Header from '../components/AdminHeader';
-import Sidebar from '../components/AdminSidebar';
-import { obtenerInicioAdmin } from '../services/inicioService';
+import Header from '../../components/AdminHeader';
+import Sidebar from '../../components/AdminSidebar';
+import { obtenerInicioAdmin } from '../../services/inicioService';
 
 function AdminHome() {
   const [menuAbierto, setMenuAbierto] = useState(false);

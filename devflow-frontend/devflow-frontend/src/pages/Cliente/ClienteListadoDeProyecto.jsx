@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import Header from '../components/ClienteHeader';
-import Sidebar from '../components/ClienteSidebar';
-import { obtenerProyectosCliente } from '../services/proyectoService';
-import styles from '../styles/botones.module.css';
-import '../styles/estilos.css';
+import Header from '../../components/ClienteHeader';
+import Sidebar from '../../components/ClienteSidebar';
+import { obtenerProyectosCliente } from '../../services/proyectoService';
+import styles from '../../styles/botones.module.css';
+import '../../styles/estilos.css';
 
 function ClienteListadoDeProyectos() {
   const [proyectos, setProyectos] = useState([]);

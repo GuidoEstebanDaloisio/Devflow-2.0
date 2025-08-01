@@ -1,8 +1,8 @@
-import '../styles/estilos.css';
+import '../../styles/estilos.css';
 import { useState, useEffect } from 'react';
-import Header from '../components/ClienteHeader';
-import Sidebar from '../components/ClienteSidebar';
-import { obtenerInicioCliente } from '../services/inicioService';
+import Header from '../../components/ClienteHeader';
+import Sidebar from '../../components/ClienteSidebar';
+import { obtenerInicioCliente } from '../../services/inicioService';
 
 function ClienteHome() {
   const [menuAbierto, setMenuAbierto] = useState(false);

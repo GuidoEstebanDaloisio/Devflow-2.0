@@ -83,6 +83,7 @@
 }
 
 /*---BOTONES DE ESTADO DEL PROYECTO-------------------------------------------------------*/
+/* Botones de estado del proyecto (boton-estado) */
 .boton-estado {
     font-size: 16px;
     font-weight: bold;
@@ -91,36 +92,64 @@
     border: none;
     cursor: pointer;
     transition: background-color 0.3s ease;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-
-}
-
-.boton-estado {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     background-color: #347eff;  /* Azul habilitado */
     color: white;
+    margin: 5px;
+    white-space: normal;
+    line-height: 1.2;
+    text-align: center;
 }
 
-.boton-estado:hover {
-    background-color: #005eff ; /* Azul más fuerte al pasar el mouse */
-    color: white;
+.boton-estado:hover:not(:disabled) {
+    background-color: #005eff; /* Azul más fuerte al pasar el mouse */
 }
 
 .boton-estado:disabled {
-    background-color: #abcaff; /* Azul claro para el estado bloqueado */
+    background-color: #abcaff; /* Azul claro para estado bloqueado */
     color: white;
     cursor: not-allowed;
 }
 
+/* Botón para el estado actual */
 .estado-actual {
     background-color: #36f190 !important; /* Verde suave */
     color: white;
     font-weight: bold;
 }
 
-/*---BOTONES DE ASIGNAR FECHA DE INICIO Y FIN DE PROYECTO---------------------------------*/
+/* Formularios de fecha (inicio y fin) */
+.input-fecha,
+.input-fecha-final {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #f8f9fa;
+    max-width: 400px;
+}
 
+/* Etiqueta dentro de formularios de fecha */
+.input-fecha label,
+.input-fecha-final label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
 
-.btn-asignar-fecha{
+/* Input date */
+.input-fecha input[type="date"],
+.input-fecha-final input[type="date"] {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+/* Botón guardar fecha */
+.btn-asignar-fecha {
     background-color: #6c5ce7;
     color: white;
     border: none;
@@ -131,6 +160,8 @@
     cursor: pointer;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     transition: background-color 0.2s ease;
+    margin-top: 12px;
+    display: inline-block;
 }
 
 .btn-asignar-fecha:hover {

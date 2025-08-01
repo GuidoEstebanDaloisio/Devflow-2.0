@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpSession;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -97,41 +98,59 @@ public class DesarrolladorController {
     }
 
     //-ASIGNACION Y DESASIGNACION---------------------------------------------------------------------------
-    @PostMapping("/admin/asignarDesarrollador")
-    public String asignarDesarrollador(@RequestParam Long proyectoId,
-            HttpSession session,
-            @RequestParam Long desarrolladorId) {
+    @PostMapping("/admin/asignar")
+    public ResponseEntity<String> asignarDesarrolladorReact(
+            @RequestBody Map<String, Long> datos,
+            @RequestHeader("Authorization") String authHeader) {
 
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esAdministrador()) {
-            return "redirect:/login";
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token no proporcionado");
         }
+
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuario = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        if (usuario == null || !usuario.esAdministrador()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No autorizado");
+        }
+
+        Long proyectoId = datos.get("proyectoId");
+        Long desarrolladorId = datos.get("desarrolladorId");
 
         try {
             desarrolladorService.asignarAProyecto(proyectoId, desarrolladorId);
-            return ("redirect:/admin/proyectos/detalles/" + proyectoId);
+            return ResponseEntity.ok("Desarrollador asignado correctamente");
         } catch (IllegalArgumentException e) {
-            return "redirect:/admin/proyectos/detalles/{proyectoId}?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    @PostMapping("/admin/desasignarDesarrollador")
-    public String desasignarDesarrollador(@RequestParam Long proyectoId,
-            HttpSession session,
-            @RequestParam Long desarrolladorId) {
+    @PostMapping("/admin/desasignar")
+    public ResponseEntity<String> desasignarDesarrolladorReact(
+            @RequestBody Map<String, Long> datos,
+            @RequestHeader("Authorization") String authHeader) {
 
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esAdministrador()) {
-            return "redirect:/login";
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token no proporcionado");
         }
+
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuario = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        if (usuario == null || !usuario.esAdministrador()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No autorizado");
+        }
+
+        Long proyectoId = datos.get("proyectoId");
+        Long desarrolladorId = datos.get("desarrolladorId");
 
         try {
             desarrolladorService.desasignarAProyecto(proyectoId, desarrolladorId);
-            return ("redirect:/admin/proyectos/detalles/" + proyectoId);
+            return ResponseEntity.ok("Desarrollador desasignado correctamente");
         } catch (IllegalArgumentException e) {
-            return "redirect:/admin/proyectos/detalles/{proyectoId}?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

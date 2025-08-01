@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import Header from "../components/AdminHeader";
-import AdminSidebar from "../components/AdminSidebar";
-import { obtenerProyectosAdmin } from "../services/proyectoService";
-import styles from '../styles/botones.module.css';
-import "../styles/estilos.css";
+import Header from "../../components/AdminHeader";
+import AdminSidebar from "../../components/AdminSidebar";
+import { obtenerProyectosAdmin } from "../../services/proyectoService";
+import styles from '../../styles/botones.module.css';
+import "../../styles/estilos.css";
 
 function AdminListadoDeProyectos() {
   const [proyectos, setProyectos] = useState([]);

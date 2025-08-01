@@ -6,7 +6,9 @@ import com.example.DevFlow.repository.DesarrolladorRepository;
 import com.example.DevFlow.repository.ProyectoRepository;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +55,7 @@ public class ProyectoService {
         if (actualizado.getPresupuesto() == null || actualizado.getPresupuesto() <= 0) {
             throw new IllegalArgumentException(PRESUPUESTO_DEBE_SER_MAYOR_A_CERO);
         }
-        
+
         existente.setTitulo(actualizado.getTitulo());
         existente.setDescripcion(actualizado.getDescripcion());
         existente.setMedioEncargo(actualizado.getMedioEncargo());
@@ -195,6 +197,21 @@ public class ProyectoService {
         if (proyecto.getEstadoAvance() != EstadoProyecto.ESPERANDO_REVISION) {
             throw new IllegalArgumentException(NO_SE_PUEDE_EDITAR_PROYECTO_EN_ESTE_ESTADO);
         }
+    }
+
+    public Map<String, Boolean> consultaGeneralParaFormularioDeCambioDeEstado(Proyecto proyecto) {
+        Map<String, Boolean> estadosPermitidos = new HashMap<>();
+
+        estadosPermitidos.put("puedeVolverARevision", proyecto.puedeVolverARevision());
+        estadosPermitidos.put("puedeAprobarse", proyecto.puedeAprobarse());
+        estadosPermitidos.put("puedeRechazarse", proyecto.puedeRechazarse());
+        estadosPermitidos.put("puedeCancelarse", proyecto.puedeCancelarse());
+        estadosPermitidos.put("puedeDesarrollarse", proyecto.puedeDesarrollarse());
+        estadosPermitidos.put("puedeFinalizarse", proyecto.puedeFinalizarse());
+        estadosPermitidos.put("puedePausarse", proyecto.puedePausarse());
+        estadosPermitidos.put("puedeEditarse", proyecto.puedeEditarse());
+
+        return estadosPermitidos;
     }
 
     public void cambiarEstado(Proyecto proyecto, EstadoProyecto nuevoEstado) {

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import Header from '../components/AdminHeader';
-import Sidebar from '../components/AdminSidebar';
-import { obtenerUsuariosAdmin } from '../services/usuarioService';
-import '../styles/estilos.css';
-import styles from '../styles/botones.module.css';
+import Header from '../../components/AdminHeader';
+import Sidebar from '../../components/AdminSidebar';
+import { obtenerUsuariosAdmin } from '../../services/usuarioService';
+import '../../styles/estilos.css';
+import styles from '../../styles/botones.module.css';
 
 function AdminListadoDeUsuarios() {
   const [usuarios, setUsuarios] = useState([]);

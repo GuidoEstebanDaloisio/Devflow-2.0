@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import Header from '../components/AdminHeader';
-import Sidebar from '../components/AdminSidebar';
-import { obtenerDesarrolladoresAdmin } from '../services/desarrolladorService'; // Asegurate de tener este método
-import '../styles/estilos.css';
-import styles from '../styles/botones.module.css';
+import Header from '../../components/AdminHeader';
+import Sidebar from '../../components/AdminSidebar';
+import { obtenerDesarrolladoresAdmin } from '../../services/desarrolladorService'; // Asegurate de tener este método
+import '../../styles/estilos.css';
+import styles from '../../styles/botones.module.css';
 
 function AdminListadoDeDesarrolladores() {
   const [desarrolladores, setDesarrolladores] = useState([]);

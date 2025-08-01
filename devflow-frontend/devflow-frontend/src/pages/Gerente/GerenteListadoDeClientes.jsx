@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import Header from '../components/GerenteHeader';
-import Sidebar from '../components/GerenteSidebar';
-import { obtenerClientesGerente } from '../services/usuarioService';
-import '../styles/estilos.css';
-import styles from '../styles/botones.module.css';
+import Header from '../../components/GerenteHeader';
+import Sidebar from '../../components/GerenteSidebar';
+import { obtenerClientesGerente } from '../../services/usuarioService';
+import '../../styles/estilos.css';
+import styles from '../../styles/botones.module.css';
 
 function GerenteListadoDeClientes() {
   const [clientes, setClientes] = useState([]);

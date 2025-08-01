@@ -1,8 +1,8 @@
-import '../styles/estilos.css';
+import '../../styles/estilos.css';
 import { useState, useEffect } from 'react';
-import Header from '../components/GerenteHeader';
-import Sidebar from '../components/GerenteSidebar';
-import { obtenerInicioGerente } from '../services/inicioService';
+import Header from '../../components/GerenteHeader';
+import Sidebar from '../../components/GerenteSidebar';
+import { obtenerInicioGerente } from '../../services/inicioService';
 
 function GerenteHome() {
   const [menuAbierto, setMenuAbierto] = useState(false);

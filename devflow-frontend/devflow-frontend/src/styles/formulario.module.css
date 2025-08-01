@@ -1,0 +1,66 @@
+/* formulario.module.css */
+
+.formulario-fecha {
+  margin-top: 1.5rem;
+  padding: 20px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 400px;
+}
+
+.formulario-fecha label {
+  font-weight: bold;
+  color: #333;
+  font-size: 16px;
+}
+
+.formulario-fecha input[type="date"] {
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  font-size: 16px;
+  width: 100%;
+}
+
+.formulario-fecha button {
+  background-color: #6c5ce7;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.formulario-fecha button:hover {
+  background-color: #5a4acb;
+}
+
+.mensaje-envio {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #dff0d8;
+  border: 1px solid #a3d5a3;
+  color: #3c763d;
+  border-radius: 12px;
+  font-weight: 500;
+}
+.fila-fecha {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.fila-fecha input[type="date"] {
+  flex: 1;
+}
+
+.fila-fecha button {
+  white-space: nowrap;
+}

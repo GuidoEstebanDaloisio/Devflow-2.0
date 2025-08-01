@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import Header from '../components/GerenteHeader';
-import Sidebar from '../components/GerenteSidebar';
-import { obtenerProyectosGerente } from '../services/proyectoService';
-import styles from '../styles/botones.module.css';
-
-import '../styles/estilos.css';
+import Header from '../../components/GerenteHeader';
+import Sidebar from '../../components/GerenteSidebar';
+import { obtenerProyectosGerente } from '../../services/proyectoService';
+import styles from '../../styles/botones.module.css';
+import '../../styles/estilos.css';
 
 function GerenteListadoDeProyectos() {
   const [proyectos, setProyectos] = useState([]);
