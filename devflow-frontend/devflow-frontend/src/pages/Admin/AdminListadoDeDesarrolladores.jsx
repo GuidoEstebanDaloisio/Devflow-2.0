@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Header from '../../components/AdminHeader';
 import Sidebar from '../../components/AdminSidebar';
-import { eliminarDesarrollador, obtenerDesarrolladoresAdmin } from '../../services/desarrolladorService'; // actualizado
+import { eliminarDesarrollador, obtenerDesarrolladoresAdmin } from '../../services/desarrolladorService';
 import '../../styles/estilos.css';
 import styles from '../../styles/botones.module.css';
 

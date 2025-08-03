@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/ClienteHeader';
 import Sidebar from '../../components/ClienteSidebar';
-import { obtenerDetalleProyecto } from '../../services/proyectoService';
+import { obtenerDetalleProyectoCliente } from '../../services/proyectoService';
 import '../../styles/estilos.css';
 import styles from '../../styles/botones.module.css';
 
@@ -13,7 +13,7 @@ function ClienteDetalleProyecto() {
   const [desarrolladores, setDesarrolladores] = useState([]);
 
   useEffect(() => {
-    obtenerDetalleProyecto(id)
+    obtenerDetalleProyectoCliente(id)
       .then(data => {
         setProyecto(data.proyecto);
         setDesarrolladores(data.desarrolladoresAsignados || []);

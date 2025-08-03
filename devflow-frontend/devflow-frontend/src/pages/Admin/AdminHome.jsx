@@ -5,11 +5,9 @@ import Sidebar from '../../components/AdminSidebar';
 import { obtenerInicioAdmin } from '../../services/inicioService';
 
 function AdminHome() {
-  const [menuAbierto, setMenuAbierto] = useState(false);
   const [usuario, setUsuario] = useState(null);
   const [estadisticas, setEstadisticas] = useState(null);
 
-  const toggleDropdown = () => setMenuAbierto(!menuAbierto);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('usuario');

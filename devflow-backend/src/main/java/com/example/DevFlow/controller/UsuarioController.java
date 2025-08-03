@@ -44,7 +44,7 @@ public class UsuarioController {
     @Autowired
     private ProyectoService proyectoService;
 
-    //-VISTAS GERENTE---------------------------------------------------------------------------------------    
+    // ---------------- GERENTE ---------------- //
     @GetMapping("/gerente/clientes")
     public ResponseEntity<List<UsuarioDTO>> obtenerClientesComoGerente(
             @RequestParam(required = false) String filtro,
@@ -103,7 +103,7 @@ public class UsuarioController {
         return ResponseEntity.ok(respuesta);
     }
 
-    //-VISTAS ADMINISTRADOR---------------------------------------------------------------------------------    
+    // ---------------- ADMIN ---------------- //
     @GetMapping("/admin/usuarios")
     public ResponseEntity<List<UsuarioDTO>> obtenerUsuariosComoAdmin(
             @RequestParam(required = false) String filtro,
@@ -155,66 +155,6 @@ public class UsuarioController {
         return ResponseEntity.ok(new UsuarioDTO(usuario));
     }
 
-    @GetMapping("/admin/usuarios/nuevo")
-    public String mostrarFormularioNuevoUsuario(
-            HttpSession session,
-            Model model) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esAdministrador()) {
-            return "redirect:/login";
-        }
-
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-
-        // Muestra la vista con el formulario
-        return "administrador/nuevoUsuario";
-    }
-
-    /*@GetMapping("/admin/usuarios/editar/{id}")
-    public String mostrarFormularioEdicion(
-            @PathVariable Long id,
-            HttpSession session,
-            Model model) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esAdministrador()) {
-            return "redirect:/login";
-        }
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-        try {
-            Usuario usuarioEditable = usuarioService.obtenerUsuarioPorId(id);
-            model.addAttribute("usuario", usuarioEditable);
-            return "administrador/editarUsuario";
-        } catch (IllegalArgumentException e) {
-            return "redirect:/admin/usuarios?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);    //Envio el error desde el servicio
-        }
-    }*/
-    @GetMapping("/api/admin/usuarios/{id}")
-    public ResponseEntity<?> obtenerDetalleUsuario(
-            @PathVariable Long id,
-            @RequestHeader("Authorization") String authHeader) {
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        String token = authHeader.substring(7);
-        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
-        Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
-
-        if (usuarioSesion == null || !usuarioSesion.esAdministrador()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        try {
-            Usuario usuario = usuarioService.obtenerUsuarioPorId(id);
-            UsuarioDTO usuarioDTO = new UsuarioDTO(usuario);
-            return ResponseEntity.ok(usuarioDTO);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
-
     //-ALTA, BAJA Y MODIFICACION----------------------------------------------------------------------------
     @PostMapping("/admin/usuarios/nuevo")
     public ResponseEntity<?> crearUsuario(
@@ -247,31 +187,30 @@ public class UsuarioController {
         }
     }
 
-@DeleteMapping("/admin/usuarios/{id}")
-public ResponseEntity<?> eliminarUsuario(
-        @PathVariable Long id,
-        @RequestHeader("Authorization") String authHeader) {
+    @DeleteMapping("/admin/usuarios/{id}")
+    public ResponseEntity<?> eliminarUsuario(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
 
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        if (usuarioSesion == null || !usuarioSesion.esAdministrador()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            usuarioService.eliminarUsuario(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No se pudo eliminar el usuario.");
+        }
     }
-
-    String token = authHeader.substring(7);
-    String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
-    Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
-
-    if (usuarioSesion == null || !usuarioSesion.esAdministrador()) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-    }
-
-    try {
-        usuarioService.eliminarUsuario(id);
-        return ResponseEntity.noContent().build();
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No se pudo eliminar el usuario.");
-    }
-}
-
 
     @PutMapping("/admin/usuarios/editar/{id}")
     public ResponseEntity<?> actualizarUsuario(

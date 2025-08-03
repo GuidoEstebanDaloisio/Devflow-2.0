@@ -30,22 +30,7 @@ function GerenteDetalleProyecto() {
 
     const formatoFecha = (fecha) => fecha ? new Date(fecha).toLocaleDateString() : '--';
 
-    const handleCambioEstado = async (nuevoEstado) => {
-        // TODO: realizar POST al backend para actualizar estado
-        console.log(`Enviar nuevo estado: ${nuevoEstado}`);
-    };
-
-    const guardarFechaInicio = async (fecha) => {
-        // TODO: realizar POST al backend para guardar fecha de inicio
-        console.log(`Guardar fecha inicio: ${fecha}`);
-    };
-
-    const guardarFechaFinal = async (fecha) => {
-        // TODO: realizar POST al backend para guardar fecha final
-        console.log(`Guardar fecha finalización: ${fecha}`);
-    };
-
-    if (!proyecto || !permisos) return <p>Cargando...</p>; //Espera permisos también
+    if (!proyecto || !permisos) return <p>Cargando...</p>; 
 
     return (
         <>

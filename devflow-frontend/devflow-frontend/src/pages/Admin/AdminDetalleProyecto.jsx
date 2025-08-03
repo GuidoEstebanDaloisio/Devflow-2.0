@@ -68,7 +68,6 @@ function AdminDetalleProyecto() {
 
           {(proyecto.estadoAvance === 'EN_PROGRESO' || proyecto.estadoAvance === 'EN_PAUSA') && (
             <div className="asignacion-container">
-              {/* Desarrolladores Asignados */}
               <div className="user-card tabla-asignados">
                 <h2>Desarrolladores Asignados</h2>
                 <table className="user-table">
@@ -103,7 +102,6 @@ function AdminDetalleProyecto() {
                 </table>
               </div>
 
-              {/* Desarrolladores Disponibles */}
               <div className="user-card tabla-disponibles">
                 <h2>Desarrolladores Disponibles</h2>
                 <table className="user-table">

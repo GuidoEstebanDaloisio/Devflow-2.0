@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react';
 import Header from '../../components/AdminHeader';
 import Sidebar from '../../components/AdminSidebar';
-import {
-  obtenerUsuariosAdmin,
-  eliminarUsuario
-} from '../../services/usuarioService';
+import {obtenerUsuariosComoAdmin, eliminarUsuario} from '../../services/usuarioService';
 import '../../styles/estilos.css';
 import styles from '../../styles/botones.module.css';
 
@@ -29,7 +26,7 @@ function AdminListadoDeUsuarios() {
 
   const cargarUsuarios = async () => {
     try {
-      const data = await obtenerUsuariosAdmin(filtro, rol);
+      const data = await obtenerUsuariosComoAdmin(filtro, rol);
       setUsuarios(data);
     } catch (err) {
       console.error('Error al obtener usuarios:', err);

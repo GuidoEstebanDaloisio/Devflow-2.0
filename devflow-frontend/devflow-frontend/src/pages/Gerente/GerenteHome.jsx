@@ -5,11 +5,9 @@ import Sidebar from '../../components/GerenteSidebar';
 import { obtenerInicioGerente } from '../../services/inicioService';
 
 function GerenteHome() {
-  const [menuAbierto, setMenuAbierto] = useState(false);
   const [usuario, setUsuario] = useState(null);
   const [estadisticas, setEstadisticas] = useState(null);
 
-  const toggleDropdown = () => setMenuAbierto(!menuAbierto);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('usuario');

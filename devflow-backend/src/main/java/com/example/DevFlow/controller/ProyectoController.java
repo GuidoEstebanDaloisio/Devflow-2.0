@@ -40,7 +40,7 @@ public class ProyectoController {
 
     // ---------------- ADMIN ---------------- //
     @GetMapping("/admin")
-    public List<Proyecto> obtenerProyectosAdmin(
+    public List<Proyecto> obtenerProyectosComoAdmin(
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false) String estado,
             @RequestHeader("Authorization") String authHeader) {
@@ -67,7 +67,7 @@ public class ProyectoController {
     }
 
     @GetMapping("/admin/{id}")
-    public ResponseEntity<Map<String, Object>> obtenerDetallesProyectoAdmin(
+    public ResponseEntity<Map<String, Object>> obtenerDetallesProyectoComoAdmin(
             @PathVariable Long id,
             @RequestHeader("Authorization") String authHeader) {
 
@@ -103,7 +103,7 @@ public class ProyectoController {
 
     // ---------------- CLIENTE ---------------- //
     @GetMapping("/cliente")
-    public List<Proyecto> obtenerProyectosCliente(
+    public List<Proyecto> obtenerProyectosComoCliente(
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false) String estado,
             @RequestHeader("Authorization") String authHeader) {
@@ -130,7 +130,7 @@ public class ProyectoController {
     }
 
     @GetMapping("/cliente/{id}")
-    public ResponseEntity<Map<String, Object>> obtenerDetallesProyectoCliente(
+    public ResponseEntity<Map<String, Object>> obtenerDetallesProyectoComoCliente(
             @PathVariable Long id,
             @RequestHeader("Authorization") String authHeader) {
 
@@ -166,7 +166,7 @@ public class ProyectoController {
 
     // ---------------- GERENTE ---------------- //
     @GetMapping("/gerente")
-    public List<Proyecto> obtenerProyectosGerente(
+    public List<Proyecto> obtenerProyectosComoGerente(
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false) String estado,
             @RequestHeader("Authorization") String authHeader) {
@@ -193,7 +193,7 @@ public class ProyectoController {
     }
 
     @GetMapping("/gerente/{id}")
-    public ResponseEntity<Map<String, Object>> obtenerDetallesProyectoGerente(
+    public ResponseEntity<Map<String, Object>> obtenerDetallesProyectoComoGerente(
             @PathVariable Long id,
             @RequestHeader("Authorization") String authHeader) {
 
@@ -227,38 +227,38 @@ public class ProyectoController {
         return ResponseEntity.ok(respuesta);
     }
 
-@PostMapping("/gerente/proyecto/nuevo")
-public ResponseEntity<?> crearProyecto(
-        @RequestBody ProyectoDTO nuevoProyecto,
-        @RequestHeader("Authorization") String authHeader) {
+    //-ALTA, BAJA Y MODIFICACION----------------------------------------------------------------------------
+    @PostMapping("/gerente/proyecto/nuevo")
+    public ResponseEntity<?> crearProyecto(
+            @RequestBody ProyectoDTO nuevoProyecto,
+            @RequestHeader("Authorization") String authHeader) {
 
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        if (usuarioSesion == null || !usuarioSesion.esGerente()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            Usuario cliente = usuarioService.obtenerUsuarioPorId(nuevoProyecto.getClienteId());
+            proyectoService.crearProyecto(
+                    nuevoProyecto.getTitulo(),
+                    nuevoProyecto.getDescripcion(),
+                    nuevoProyecto.getMedioEncargo(),
+                    nuevoProyecto.getPresupuesto(),
+                    cliente
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
-
-    String token = authHeader.substring(7);
-    String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
-    Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
-
-    if (usuarioSesion == null || !usuarioSesion.esGerente()) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-    }
-
-    try {
-        Usuario cliente = usuarioService.obtenerUsuarioPorId(nuevoProyecto.getClienteId());
-        proyectoService.crearProyecto(
-                nuevoProyecto.getTitulo(),
-                nuevoProyecto.getDescripcion(),
-                nuevoProyecto.getMedioEncargo(),
-                nuevoProyecto.getPresupuesto(),
-                cliente
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    } catch (IllegalArgumentException e) {
-        return ResponseEntity.badRequest().body(e.getMessage());
-    }
-}
-
 
     @PutMapping("/gerente/{id}/estado")
     public ResponseEntity<?> cambiarEstadoProyecto(
@@ -350,33 +350,32 @@ public ResponseEntity<?> crearProyecto(
         return ResponseEntity.ok(Map.of("mensaje", "Fecha de fin establecida correctamente"));
     }
 
-@DeleteMapping("/gerente/{id}")
-public ResponseEntity<?> eliminarProyecto(
-        @PathVariable Long id,
-        @RequestHeader("Authorization") String authHeader) {
+    @DeleteMapping("/gerente/{id}")
+    public ResponseEntity<?> eliminarProyecto(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
 
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        if (usuarioSesion == null || !usuarioSesion.esGerente()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            proyectoService.eliminarProyecto(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("No se pudo eliminar el proyecto.");
+        }
     }
-
-    String token = authHeader.substring(7);
-    String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
-    Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
-
-    if (usuarioSesion == null || !usuarioSesion.esGerente()) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-    }
-
-    try {
-        proyectoService.eliminarProyecto(id);
-        return ResponseEntity.noContent().build();
-    } catch (Exception e) {
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("No se pudo eliminar el proyecto.");
-    }
-}
-
 
     @PutMapping("/gerente/{id}")
     public ResponseEntity<?> editarProyecto(
@@ -403,17 +402,4 @@ public ResponseEntity<?> eliminarProyecto(
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
-    // ---------------- AUXILIARES ---------------- //
-    @GetMapping("/{id}/desarrolladores")
-    public List<Desarrollador> obtenerDesarrolladoresAsignados(@PathVariable Long id) {
-        Proyecto proyecto = proyectoService.obtenerProyectoPorId(id);
-        return desarrolladorService.obtenerPorProyecto(proyecto);
-    }
-
-    @GetMapping("/desarrolladores/disponibles")
-    public List<Desarrollador> obtenerDesarrolladoresDisponibles() {
-        return desarrolladorService.obtenerDesarrolladoresDisponibles();
-    }
-
 }

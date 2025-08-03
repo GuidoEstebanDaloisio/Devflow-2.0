@@ -33,8 +33,6 @@ public class DesarrolladorController {
     @Autowired
     private DesarrolladorService desarrolladorService;
 
-    @Autowired
-    private ProyectoService proyectoService;
 
     //-VISTAS-----------------------------------------------------------------------------------------------    
     @GetMapping("/admin/desarrolladores")
@@ -63,40 +61,6 @@ public class DesarrolladorController {
         return ResponseEntity.ok(desarrolladoresDTO);
     }
 
-    @GetMapping("/admin/desarrolladores/nuevo")
-    public String mostrarFormularioNuevoDesarrollador(HttpSession session,
-            Model model) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esAdministrador()) {
-            return "redirect:/login";
-        }
-
-        // Muestra la vista con el formulario
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-        return "administrador/nuevoDesarrollador";
-    }
-
-    /*
-    @GetMapping("/admin/desarrolladores/editar/{id}")
-    public String mostrarFormularioEdicionDesarrollador(@PathVariable Long id,
-            HttpSession session,
-            Model model) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esAdministrador()) {
-            return "redirect:/login";
-        }
-        model.addAttribute("nombreUsuario", usuario.getNombre());
-
-        try {
-            Desarrollador desarrollador = desarrolladorService.obtenerDesarrolladorPorId(id);
-            model.addAttribute("desarrollador", desarrollador);
-            return "administrador/editarDesarrollador";
-        } catch (IllegalArgumentException e) {
-            return "redirect:/admin/desarrolladores?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);    //Envio el error desde el servicio
-        }
-    }*/
     @GetMapping("/admin/desarrolladores/{id}")
     public ResponseEntity<?> obtenerDetalleDesarrollador(
             @PathVariable Long id,
@@ -214,31 +178,30 @@ public class DesarrolladorController {
         }
     }
 
-@DeleteMapping("/admin/desarrolladores/{id}")
-public ResponseEntity<?> eliminarDesarrollador(
-        @PathVariable Long id,
-        @RequestHeader("Authorization") String authHeader) {
+    @DeleteMapping("/admin/desarrolladores/{id}")
+    public ResponseEntity<?> eliminarDesarrollador(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
 
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        if (usuarioSesion == null || !usuarioSesion.esAdministrador()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            desarrolladorService.eliminarDesarrollador(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No se pudo eliminar el desarrollador.");
+        }
     }
-
-    String token = authHeader.substring(7);
-    String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
-    Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
-
-    if (usuarioSesion == null || !usuarioSesion.esAdministrador()) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-    }
-
-    try {
-        desarrolladorService.eliminarDesarrollador(id);
-        return ResponseEntity.noContent().build();
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No se pudo eliminar el desarrollador.");
-    }
-}
-
 
     @PutMapping("/admin/desarrolladores/editar/{id}")
     public ResponseEntity<?> actualizarDesarrollador(

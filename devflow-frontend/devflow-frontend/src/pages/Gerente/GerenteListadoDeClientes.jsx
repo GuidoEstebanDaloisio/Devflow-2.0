@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Header from '../../components/GerenteHeader';
 import Sidebar from '../../components/GerenteSidebar';
-import { obtenerClientesGerente } from '../../services/usuarioService';
+import { obtenerClientesComoGerente } from '../../services/usuarioService';
 import '../../styles/estilos.css';
 import styles from '../../styles/botones.module.css';
 
@@ -19,7 +19,7 @@ function GerenteListadoDeClientes() {
 
   useEffect(() => {
     if (usuario) {
-      obtenerClientesGerente(filtro)
+      obtenerClientesComoGerente(filtro)
         .then(setClientes)
         .catch(err => console.error('Error al obtener clientes:', err));
     }
@@ -44,7 +44,6 @@ function GerenteListadoDeClientes() {
             <button type="submit">Buscar</button>
           </form>
 
-          {/* Tabla de clientes */}
           <div className="user-card">
             <table className="user-table">
               <thead>

@@ -5,11 +5,9 @@ import Sidebar from '../../components/ClienteSidebar';
 import { obtenerInicioCliente } from '../../services/inicioService';
 
 function ClienteHome() {
-  const [menuAbierto, setMenuAbierto] = useState(false);
   const [usuario, setUsuario] = useState(null);
   const [estadisticas, setEstadisticas] = useState(null);
 
-  const toggleDropdown = () => setMenuAbierto(!menuAbierto);
 
 useEffect(() => {
   const storedUser = localStorage.getItem('usuario');
@@ -21,7 +19,7 @@ useEffect(() => {
       .then(data => {
         console.log("Inicio cliente recibido:", data);
         setEstadisticas(data.estadisticas);
-        setUsuario(data.usuario); // importante: sobreescribimos con los datos completos si querés precisión
+        setUsuario(data.usuario);
       })
       .catch(err => console.error("Error al traer estadísticas:", err));
   }

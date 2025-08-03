@@ -1,5 +1,4 @@
 import axios from 'axios';
-
 const API_URL = 'http://localhost:8080/api/proyectos';
 
 //--LISTADOS---------------------------------------------------------------------
@@ -56,7 +55,7 @@ export const obtenerProyectosAdmin = async (filtro, estado) => {
 
 
 //--DETALLES---------------------------------------------------------------------
-export const obtenerDetalleProyecto = async (id) => {
+export const obtenerDetalleProyectoCliente = async (id) => {
   const token = localStorage.getItem('token');
 
   const response = await axios.get(`${API_URL}/cliente/${id}`, {
@@ -93,8 +92,8 @@ export const obtenerDetalleProyectoGerente = async (id) => {
 };
 
 
-//--FUNCIONES--------------------------------------------------------------------
 
+//--FUNCIONES--------------------------------------------------------------------
 export async function cambiarEstadoProyectoComoGerente(idProyecto, nuevoEstado) {
   const token = localStorage.getItem('token');
 
@@ -127,7 +126,7 @@ export const establecerFechaInicio = async (idProyecto, fechaInicio) => {
     throw new Error('No se pudo establecer la fecha de inicio');
   }
 
-  return await response.json(); // { mensaje: "..."}
+  return await response.json(); 
 };
 
 export const establecerFechaFin = async (idProyecto, fechaFin) => {
@@ -144,7 +143,7 @@ export const establecerFechaFin = async (idProyecto, fechaFin) => {
     throw new Error('No se pudo establecer la fecha de fin');
   }
 
-  return await response.json(); // { mensaje: "..." }
+  return await response.json(); 
 };
 
 
@@ -158,7 +157,7 @@ export const actualizarProyectoComoGerente = async (id, proyectoActualizado) => 
     },
   });
 
-  return response.data; // si el backend no devuelve data, será undefined, no hay problema
+  return response.data; 
 };
 
 

@@ -48,7 +48,6 @@ function AdminEditarDesarrollador() {
       navigate('/admin/desarrolladores');
     } catch (err) {
       console.error('Error al actualizar desarrollador:', err);
-      // Puedes adaptar el mensaje según la respuesta del backend
       const msg = err.response?.data || 'No se pudo actualizar el desarrollador';
       setError(msg);
     }

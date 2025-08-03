@@ -6,7 +6,7 @@ import '../../styles/estilos.css';
 import estilosFormulario from '../../styles/formulario.module.css';
 import stylesBotones from '../../styles/botones.module.css';
 import { crearProyecto } from '../../services/proyectoService';
-import { obtenerClientesGerente } from '../../services/usuarioService';
+import { obtenerClientesComoGerente } from '../../services/usuarioService';
 
 function GerenteNuevoProyecto() {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ function GerenteNuevoProyecto() {
   useEffect(() => {
     const cargarClientes = async () => {
       try {
-        const data = await obtenerClientesGerente('');
+        const data = await obtenerClientesComoGerente('');
         setClientes(data);
       } catch (err) {
         console.error('Error al cargar clientes:', err);

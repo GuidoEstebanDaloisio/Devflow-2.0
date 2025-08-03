@@ -2,11 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/GerenteHeader';
 import Sidebar from '../../components/GerenteSidebar';
-import { 
-  obtenerDetalleProyectoGerente, 
-  actualizarProyectoComoGerente 
-} from '../../services/proyectoService';
-
+import {obtenerDetalleProyectoGerente, actualizarProyectoComoGerente} from '../../services/proyectoService';
 import '../../styles/estilos.css';
 import estilosFormulario from '../../styles/formulario.module.css';
 import stylesBotones from '../../styles/botones.module.css';

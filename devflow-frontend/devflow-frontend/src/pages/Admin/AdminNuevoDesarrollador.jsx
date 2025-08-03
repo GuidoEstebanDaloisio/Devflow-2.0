@@ -25,7 +25,7 @@ function AdminNuevoDesarrollador() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await crearDesarrollador(form); // Esta función debe hacer un POST al backend
+      await crearDesarrollador(form);
       navigate('/admin/desarrolladores');
     } catch (err) {
       console.error('Error al crear desarrollador:', err);
