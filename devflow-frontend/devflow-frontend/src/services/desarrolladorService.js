@@ -84,3 +84,13 @@ export const crearDesarrollador = async (nuevoUsuario) => {
 
   return response.data;
 };
+
+export const eliminarDesarrollador = async (id) => {
+  const token = localStorage.getItem('token');
+
+  await axios.delete(`${API_URL}/desarrolladores/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

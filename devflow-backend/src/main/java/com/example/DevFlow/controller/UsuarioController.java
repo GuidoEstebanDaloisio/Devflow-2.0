@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -246,20 +247,31 @@ public class UsuarioController {
         }
     }
 
-    @GetMapping("/admin/usuarios/eliminar/{id}")
-    public String eliminarUsuario(
-            @PathVariable Long id,
-            HttpSession session) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
+@DeleteMapping("/admin/usuarios/{id}")
+public ResponseEntity<?> eliminarUsuario(
+        @PathVariable Long id,
+        @RequestHeader("Authorization") String authHeader) {
 
-        if (!usuario.esAdministrador()) {
-            return "redirect:/login";
-        }
-
-        usuarioService.eliminarUsuario(id);
-
-        return "redirect:/admin/usuarios";
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+
+    String token = authHeader.substring(7);
+    String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+    Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+    if (usuarioSesion == null || !usuarioSesion.esAdministrador()) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    try {
+        usuarioService.eliminarUsuario(id);
+        return ResponseEntity.noContent().build();
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No se pudo eliminar el usuario.");
+    }
+}
+
 
     @PutMapping("/admin/usuarios/editar/{id}")
     public ResponseEntity<?> actualizarUsuario(

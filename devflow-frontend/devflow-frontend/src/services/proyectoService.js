@@ -174,3 +174,15 @@ export const crearProyecto = async (nuevoProyecto) => {
 
   return response.data;
 };
+
+
+export const eliminarProyecto = async (id) => {
+  const token = localStorage.getItem('token');
+
+  await axios.delete(`${API_URL}/gerente/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+

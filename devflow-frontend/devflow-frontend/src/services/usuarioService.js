@@ -78,3 +78,14 @@ export const crearUsuario = async (nuevoUsuario) => {
 
   return response.data;
 };
+
+
+export const eliminarUsuario = async (id) => {
+  const token = localStorage.getItem('token');
+
+  await axios.delete(`${API_URL}/admin/usuarios/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

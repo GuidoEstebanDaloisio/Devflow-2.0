@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from '../../components/GerenteHeader';
 import Sidebar from '../../components/GerenteSidebar';
-import { obtenerProyectosGerente } from '../../services/proyectoService';
+import { obtenerProyectosGerente, eliminarProyecto } from '../../services/proyectoService';
 import styles from '../../styles/botones.module.css';
 import '../../styles/estilos.css';
 
@@ -20,15 +20,35 @@ function GerenteListadoDeProyectos() {
 
   useEffect(() => {
     if (usuario) {
-      obtenerProyectosGerente(filtro, estado)
-        .then(setProyectos)
-        .catch(err => console.error('Error al obtener proyectos del gerente:', err));
+      cargarProyectos();
     }
   }, [usuario, filtro, estado]);
 
+  const cargarProyectos = async () => {
+    try {
+      const data = await obtenerProyectosGerente(filtro, estado);
+      setProyectos(data);
+    } catch (err) {
+      console.error('Error al obtener proyectos del gerente:', err);
+    }
+  };
+
+  const handleEliminar = async (id) => {
+    const confirmacion = window.confirm('¿Estás seguro que deseas eliminar este proyecto?');
+    if (!confirmacion) return;
+
+    try {
+      await eliminarProyecto(id);
+      await cargarProyectos();
+    } catch (error) {
+      console.error('Error al eliminar proyecto:', error);
+      alert('No se pudo eliminar el proyecto.');
+    }
+  };
+
   return (
     <>
-      <Header/>
+      <Header />
       <div className="main-container">
         <Sidebar />
         <main className="content">
@@ -92,7 +112,7 @@ function GerenteListadoDeProyectos() {
                         </button>
                         <button
                           className={`${styles.btn} ${styles['btn-eliminar']}`}
-                          onClick={() => window.location.href = `/gerente/proyectos/eliminar/${proyecto.id}`}
+                          onClick={() => handleEliminar(proyecto.id)}
                         >
                           Eliminar
                         </button>
@@ -114,6 +134,5 @@ function GerenteListadoDeProyectos() {
     </>
   );
 }
-
 
 export default GerenteListadoDeProyectos;

@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import Header from '../../components/AdminHeader';
 import Sidebar from '../../components/AdminSidebar';
-import { obtenerUsuariosAdmin } from '../../services/usuarioService';
+import {
+  obtenerUsuariosAdmin,
+  eliminarUsuario
+} from '../../services/usuarioService';
 import '../../styles/estilos.css';
 import styles from '../../styles/botones.module.css';
 
@@ -20,11 +23,31 @@ function AdminListadoDeUsuarios() {
 
   useEffect(() => {
     if (usuario) {
-      obtenerUsuariosAdmin(filtro, rol)
-        .then(setUsuarios)
-        .catch(err => console.error('Error al obtener usuarios:', err));
+      cargarUsuarios();
     }
   }, [usuario, filtro, rol]);
+
+  const cargarUsuarios = async () => {
+    try {
+      const data = await obtenerUsuariosAdmin(filtro, rol);
+      setUsuarios(data);
+    } catch (err) {
+      console.error('Error al obtener usuarios:', err);
+    }
+  };
+
+  const handleEliminar = async (id) => {
+    const confirmacion = window.confirm('¿Estás seguro de que deseas eliminar este usuario?');
+    if (!confirmacion) return;
+
+    try {
+      await eliminarUsuario(id);
+      await cargarUsuarios();
+    } catch (err) {
+      console.error('Error al eliminar usuario:', err);
+      alert('No se pudo eliminar el usuario.');
+    }
+  };
 
   return (
     <>
@@ -34,14 +57,14 @@ function AdminListadoDeUsuarios() {
         <main className="content">
           <h2>Usuarios</h2>
 
-          <form onSubmit={e => e.preventDefault()} className="filter-form">
+          <form onSubmit={(e) => e.preventDefault()} className="filter-form">
             <input
               type="text"
               placeholder="Buscar por nombre o email..."
               value={filtro}
-              onChange={e => setFiltro(e.target.value)}
+              onChange={(e) => setFiltro(e.target.value)}
             />
-            <select value={rol} onChange={e => setRol(e.target.value)}>
+            <select value={rol} onChange={(e) => setRol(e.target.value)}>
               <option value="">Todos los roles</option>
               <option value="ADMINISTRADOR">Administrador</option>
               <option value="GERENTE">Gerente</option>
@@ -66,7 +89,7 @@ function AdminListadoDeUsuarios() {
                 {usuarios.length === 0 ? (
                   <tr><td colSpan="6">No se encontraron usuarios.</td></tr>
                 ) : (
-                  usuarios.map(usu => (
+                  usuarios.map((usu) => (
                     <tr key={usu.id}>
                       <td>{usu.id}</td>
                       <td>{usu.nombre}</td>
@@ -88,7 +111,7 @@ function AdminListadoDeUsuarios() {
                         </button>
                         <button
                           className={`${styles.btn} ${styles['btn-eliminar']}`}
-                          onClick={() => window.location.href = `/admin/usuarios/eliminar/${usu.id}`}
+                          onClick={() => handleEliminar(usu.id)}
                         >
                           Eliminar
                         </button>

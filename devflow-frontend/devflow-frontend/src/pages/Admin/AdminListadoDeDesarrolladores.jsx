@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import Header from '../../components/AdminHeader';
 import Sidebar from '../../components/AdminSidebar';
-import { obtenerDesarrolladoresAdmin } from '../../services/desarrolladorService'; // Asegurate de tener este método
+import { eliminarDesarrollador, obtenerDesarrolladoresAdmin } from '../../services/desarrolladorService'; // actualizado
 import '../../styles/estilos.css';
 import styles from '../../styles/botones.module.css';
+
+
+
 
 function AdminListadoDeDesarrolladores() {
   const [desarrolladores, setDesarrolladores] = useState([]);
@@ -20,11 +23,31 @@ function AdminListadoDeDesarrolladores() {
 
   useEffect(() => {
     if (usuario) {
-      obtenerDesarrolladoresAdmin(filtro, estado)
-        .then(setDesarrolladores)
-        .catch(err => console.error('Error al obtener desarrolladores:', err));
+      cargarDesarrolladores();
     }
   }, [usuario, filtro, estado]);
+
+  const cargarDesarrolladores = async () => {
+    try {
+      const data = await obtenerDesarrolladoresAdmin(filtro, estado);
+      setDesarrolladores(data);
+    } catch (err) {
+      console.error('Error al obtener desarrolladores:', err);
+    }
+  };
+
+  const handleEliminar = async (id) => {
+    const confirmacion = window.confirm('¿Estás seguro de que deseas eliminar este desarrollador?');
+    if (!confirmacion) return;
+
+    try {
+      await eliminarDesarrollador(id);
+      await cargarDesarrolladores();
+    } catch (err) {
+      console.error('Error al eliminar desarrollador:', err);
+      alert('No se pudo eliminar el desarrollador.');
+    }
+  };
 
   return (
     <>
@@ -34,14 +57,14 @@ function AdminListadoDeDesarrolladores() {
         <main className="content">
           <h2>Desarrolladores</h2>
 
-          <form onSubmit={e => e.preventDefault()} className="filter-form">
+          <form onSubmit={(e) => e.preventDefault()} className="filter-form">
             <input
               type="text"
               placeholder="Buscar por nombre o habilidad..."
               value={filtro}
-              onChange={e => setFiltro(e.target.value)}
+              onChange={(e) => setFiltro(e.target.value)}
             />
-            <select value={estado} onChange={e => setEstado(e.target.value)}>
+            <select value={estado} onChange={(e) => setEstado(e.target.value)}>
               <option value="">Todos los estados</option>
               <option value="DISPONIBLE">Disponible</option>
               <option value="ASIGNADO">Asignado</option>
@@ -57,7 +80,6 @@ function AdminListadoDeDesarrolladores() {
                   <th>Nombre</th>
                   <th>Habilidades</th>
                   <th>Disponibilidad</th>
-                  <th>Proyecto asignado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -65,13 +87,12 @@ function AdminListadoDeDesarrolladores() {
                 {desarrolladores.length === 0 ? (
                   <tr><td colSpan="6">No se encontraron desarrolladores.</td></tr>
                 ) : (
-                  desarrolladores.map(dev => (
+                  desarrolladores.map((dev) => (
                     <tr key={dev.id}>
                       <td>{dev.id}</td>
                       <td>{dev.nombre}</td>
                       <td>{dev.habilidades}</td>
                       <td>{dev.estaDisponible ? 'Disponible' : 'Asignado'}</td>
-                      <td>{dev.proyecto ? dev.proyecto.titulo : 'Sin proyecto'}</td>
                       <td className="actions">
                         <button
                           className={`${styles.btn} ${styles['btn-editar']}`}
@@ -81,7 +102,7 @@ function AdminListadoDeDesarrolladores() {
                         </button>
                         <button
                           className={`${styles.btn} ${styles['btn-eliminar']}`}
-                          onClick={() => window.location.href = `/admin/desarrolladores/eliminar/${dev.id}`}
+                          onClick={() => handleEliminar(dev.id)}
                         >
                           Eliminar
                         </button>

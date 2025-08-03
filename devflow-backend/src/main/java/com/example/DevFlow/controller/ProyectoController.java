@@ -350,15 +350,33 @@ public ResponseEntity<?> crearProyecto(
         return ResponseEntity.ok(Map.of("mensaje", "Fecha de fin establecida correctamente"));
     }
 
-    @DeleteMapping("/gerente/{id}")
-    public void eliminarProyecto(@PathVariable Long id, HttpSession session) {
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-        if (!usuario.esGerente()) {
-            throw new RuntimeException("No autorizado");
-        }
+@DeleteMapping("/gerente/{id}")
+public ResponseEntity<?> eliminarProyecto(
+        @PathVariable Long id,
+        @RequestHeader("Authorization") String authHeader) {
 
-        proyectoService.eliminarProyecto(id);
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+
+    String token = authHeader.substring(7);
+    String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+    Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+    if (usuarioSesion == null || !usuarioSesion.esGerente()) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    try {
+        proyectoService.eliminarProyecto(id);
+        return ResponseEntity.noContent().build();
+    } catch (Exception e) {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("No se pudo eliminar el proyecto.");
+    }
+}
+
 
     @PutMapping("/gerente/{id}")
     public ResponseEntity<?> editarProyecto(
