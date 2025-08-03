@@ -161,3 +161,16 @@ export const actualizarProyectoComoGerente = async (id, proyectoActualizado) => 
   return response.data; // si el backend no devuelve data, será undefined, no hay problema
 };
 
+
+export const crearProyecto = async (nuevoProyecto) => {
+  const token = localStorage.getItem('token');
+
+  const response = await axios.post(`${API_URL}/gerente/proyecto/nuevo`, nuevoProyecto, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return response.data;
+};

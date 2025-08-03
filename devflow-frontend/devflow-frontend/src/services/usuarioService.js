@@ -64,3 +64,17 @@ export const actualizarUsuario = async (idUsuario, datosActualizados) => {
 
   return response.data;
 };
+
+
+export const crearUsuario = async (nuevoUsuario) => {
+  const token = localStorage.getItem('token');
+
+  const response = await axios.post(`${API_URL}/admin/usuarios/nuevo`, nuevoUsuario, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return response.data;
+};

@@ -216,34 +216,33 @@ public class UsuarioController {
 
     //-ALTA, BAJA Y MODIFICACION----------------------------------------------------------------------------
     @PostMapping("/admin/usuarios/nuevo")
-    public String crearUsuario(
-            @RequestParam String nombre,
-            @RequestParam String email,
-            @RequestParam Long telefono,
-            @RequestParam RolUsuario rol,
-            @RequestParam String contrasenia,
-            HttpSession session,
-            Model model) {
+    public ResponseEntity<?> crearUsuario(
+            @RequestBody Usuario nuevoUsuario,
+            @RequestHeader("Authorization") String authHeader) {
 
-        Usuario usuarioSesion = (Usuario) session.getAttribute("usuario");
-
-        if (!usuarioSesion.esAdministrador()) {
-            return "redirect:/login";
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        model.addAttribute("nombreUsuario", usuarioSesion.getNombre());
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+        if (usuarioSesion == null || !usuarioSesion.esAdministrador()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
         try {
-            usuarioService.crearUsuario(nombre, contrasenia, email, telefono, rol);
-            return "redirect:/admin/usuarios";
+            usuarioService.crearUsuario(
+                    nuevoUsuario.getNombre(),
+                    nuevoUsuario.getContrasenia(),
+                    nuevoUsuario.getEmail(),
+                    nuevoUsuario.getTelefono(),
+                    nuevoUsuario.getRol()
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).build();
         } catch (IllegalArgumentException e) {
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("nombre", nombre);
-            model.addAttribute("email", email);
-            model.addAttribute("telefono", telefono);
-            model.addAttribute("rol", rol);
-            model.addAttribute("contrasenia", contrasenia);
-            return "administrador/nuevoUsuario";
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

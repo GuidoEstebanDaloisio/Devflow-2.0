@@ -185,20 +185,33 @@ public class DesarrolladorController {
 
     //-ALTA, BAJA Y MODIFICACION----------------------------------------------------------------------------
     @PostMapping("/admin/desarrolladores/nuevo")
-    public String crearDesarrollador(
-            @RequestParam String nombre,
-            @RequestParam String habilidades,
-            HttpSession session) {
+    public ResponseEntity<?> crearDesarrollador(
+            @RequestBody DesarrolladorDTO nuevoDesarrollador,
+            @RequestHeader("Authorization") String authHeader) {
 
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-
-        if (!usuario.esAdministrador()) {
-            return "redirect:/login";
+        // Validar que venga token Bearer
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        desarrolladorService.crearDesarrollador(nombre, habilidades);
+        String token = authHeader.substring(7);
+        String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+        Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
 
-        return "redirect:/admin/desarrolladores";
+        // Validar que sea admin
+        if (usuarioSesion == null || !usuarioSesion.esAdministrador()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            desarrolladorService.crearDesarrollador(
+                    nuevoDesarrollador.getNombre(),
+                    nuevoDesarrollador.getHabilidades()
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/admin/desarrolladores/eliminar/{id}")

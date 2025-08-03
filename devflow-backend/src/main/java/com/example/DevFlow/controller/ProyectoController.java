@@ -1,5 +1,6 @@
 package com.example.DevFlow.controller;
 
+import com.example.DevFlow.DTO.ProyectoDTO;
 import com.example.DevFlow.model.Desarrollador;
 import com.example.DevFlow.model.EstadoProyecto;
 import com.example.DevFlow.model.Proyecto;
@@ -226,23 +227,38 @@ public class ProyectoController {
         return ResponseEntity.ok(respuesta);
     }
 
-    @PostMapping("/gerente")
-    public void crearProyecto(
-            @RequestParam String titulo,
-            @RequestParam String descripcion,
-            @RequestParam String medio_encargo,
-            @RequestParam Double presupuesto,
-            @RequestParam Long clienteId,
-            HttpSession session) {
+@PostMapping("/gerente/proyecto/nuevo")
+public ResponseEntity<?> crearProyecto(
+        @RequestBody ProyectoDTO nuevoProyecto,
+        @RequestHeader("Authorization") String authHeader) {
 
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-        if (!usuario.esGerente()) {
-            throw new RuntimeException("No autorizado");
-        }
-
-        Usuario cliente = usuarioService.obtenerUsuarioPorId(clienteId);
-        proyectoService.crearProyecto(titulo, descripcion, medio_encargo, presupuesto, cliente);
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+
+    String token = authHeader.substring(7);
+    String nombreUsuario = jwtUtil.extraerNombreUsuario(token);
+    Usuario usuarioSesion = usuarioService.obtenerUsuarioPorNombre(nombreUsuario);
+
+    if (usuarioSesion == null || !usuarioSesion.esGerente()) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    try {
+        Usuario cliente = usuarioService.obtenerUsuarioPorId(nuevoProyecto.getClienteId());
+        proyectoService.crearProyecto(
+                nuevoProyecto.getTitulo(),
+                nuevoProyecto.getDescripcion(),
+                nuevoProyecto.getMedioEncargo(),
+                nuevoProyecto.getPresupuesto(),
+                cliente
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+}
+
 
     @PutMapping("/gerente/{id}/estado")
     public ResponseEntity<?> cambiarEstadoProyecto(
