@@ -1,5 +1,6 @@
 import axios from 'axios';
-const API_URL = 'http://localhost:8080/api/admin';
+
+const API_URL = `${process.env.REACT_APP_API_URL}/api/admin`;
 
 //--LISTADOS---------------------------------------------------------------------
 export const obtenerDesarrolladoresAdmin = async (filtro, estado) => {
